@@ -326,17 +326,17 @@ class Trainer(object):
                 break
 
 
-    def eval(self, mode='dev', meta=False):
+    def eval(self, mode='test', meta=False):
         self.matcher.eval()
 
         symbol2id = self.symbol2id
         few = self.few
 
         logging.info('EVALUATING ON %s DATA' % mode.upper())
-        if mode == 'dev':
-            test_tasks = json.load(open(self.dataset + '/dev_tasks.json'))
-        else:
-            test_tasks = json.load(open(self.dataset + '/test_tasks.json'))
+        #if mode == 'dev':
+        #    test_tasks = json.load(open(self.dataset + '/dev_tasks.json'))
+        #else:
+        test_tasks = json.load(open(self.dataset + '/test_tasks.json'))
         
         rel2candidates = self.rel2candidates
 
