@@ -38,18 +38,18 @@ def build_vocab(dataset):
     rels = set()
     ents = set()
 
-    with open(dataset + '/path_graph') as f:
-        lines = f.readlines()
-        for line in lines:
-            line = line.rstrip()
-            #e1 rel e2
-            rel = line.split('\t')[1]
-            e1 = line.split('\t')[0]
-            e2 = line.split('\t')[2]
-            rels.add(rel)
-            rels.add(rel + '_inv')
-            ents.add(e1)
-            ents.add(e2)
+    # with open(dataset + '/path_graph') as f:
+    #     lines = f.readlines()
+    #     for line in lines:
+    #         line = line.rstrip()
+    #         #e1 rel e2
+    #         rel = line.split('\t')[1]
+    #         e1 = line.split('\t')[0]
+    #         e2 = line.split('\t')[2]
+    #         rels.add(rel)
+    #         rels.add(rel + '_inv')
+    #         ents.add(e1)
+    #         ents.add(e2)
 
     relationid = {}
     with open(dataset + '/rel2id.txt', 'r', encoding='utf-8') as f:
@@ -343,9 +343,14 @@ def convert_vec(dataset):
                     f.write(str(e)+'\n')
                 else:
                     f.write(str(e)+'\t')
+
     with open(dataset + '/relation2vec.TransE', 'w', encoding='utf-8') as f:
         for emb in rel_embeddings:
-            f.write('\t'.join(list(emb))++'\n')
+            for idx, e in enumerate(list(emb)):
+                if idx == len(list(emb)) - 1:
+                    f.write(str(e) + '\n')
+                else:
+                    f.write(str(e) + '\t')
 
 
 
@@ -353,12 +358,12 @@ if __name__ == '__main__':
     start = time()
     DATASET  = './ARMY'
     #build ent2ids rel2ids
-    # build_vocab(DATASET)
-    # # build e1rel_e2.json
-    # for_filtering(DATASET, save=True)
-    # # rel2candidates.json
-    # candidate_triples(DATASET)
-    # print('Time clipse: ', time() - start)
-    # build_vocab(DATASET)
+    build_vocab(DATASET)
+    # build e1rel_e2.json
+    for_filtering(DATASET, save=True)
+    # rel2candidates.json
+    candidate_triples(DATASET)
+    print('Time clipse: ', time() - start)
+    build_vocab(DATASET)
     convert_vec(DATASET)
 

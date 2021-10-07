@@ -144,17 +144,28 @@ class Trainer(object):
             embeddings = []
             for key in rel2id.keys():
                 if key not in ['','OOV']:
+                    if key in symbol_id:
+                        print('ivy '+ key)
+                        continue
                     symbol_id[key] = i
                     i += 1
-                    embeddings.append(list(rel_embed[rel2id[key],:]))
+                    embeddings.append(list(rel_embed[int(rel2id[key]),:]))
+                # else:
+                #     print('shelly '+ key)
 
             for key in ent2id.keys():
                 if key not in ['', 'OOV']:
+                    if key in symbol_id:
+                        print('ivy '+ key)
+                        continue
                     symbol_id[key] = i
                     i += 1
-                    embeddings.append(list(ent_embed[ent2id[key],:]))
+                    embeddings.append(list(ent_embed[int(ent2id[key]),:]))
+                # else:
+                #     print('shelly '+ key)
 
             symbol_id['PAD'] = i
+
             embeddings.append(list(np.zeros((rel_embed.shape[1],))))
             embeddings = np.array(embeddings)
             assert embeddings.shape[0] == len(symbol_id.keys())
@@ -186,7 +197,7 @@ class Trainer(object):
             for line in tqdm(lines):
                 e1,rel,e2 = line.rstrip().split()
                 self.e1_rele2[e1].append((self.symbol2id[rel], self.symbol2id[e2]))
-                self.e1_rele2[e2].append((self.symbol2id[rel+'_inv'], self.symbol2id[e1]))
+                #self.e1_rele2[e2].append((self.symbol2id[rel+'_inv'], self.symbol2id[e1]))
 
         degrees = {}
         for ent, id_ in self.ent2id.items():
@@ -197,8 +208,8 @@ class Trainer(object):
             degrees[ent] = len(neighbors)
             self.e1_degrees[id_] = len(neighbors) # add one for self conn
             for idx, _ in enumerate(neighbors):
-                self.connections[id_, idx, 0] = _[0]
-                self.connections[id_, idx, 1] = _[1]
+                self.connections[int(id_), idx, 0] = _[0]
+                self.connections[int(id_), idx, 1] = _[1]
 
         # json.dump(degrees, open(self.dataset + '/degrees', 'w'))
         # assert 1==2
@@ -215,11 +226,10 @@ class Trainer(object):
 
     def get_meta(self, left, right):
         left_connections = Variable(
-            torch.LongTensor(np.stack([self.connections[_, :, :] for _ in left], axis=0)))
-        left_degrees = Variable(torch.FloatTensor([self.e1_degrees[_] for _ in left]))
-        right_connections = Variable(
-            torch.LongTensor(np.stack([self.connections[_, :, :] for _ in right], axis=0)))
-        right_degrees = Variable(torch.FloatTensor([self.e1_degrees[_] for _ in right]))
+            torch.LongTensor(np.stack([self.connections[int(i), :, :] for i in left], axis=0)))
+        left_degrees = Variable(torch.FloatTensor([self.e1_degrees[int(i)] for i in left]))
+        right_connections = Variable(torch.LongTensor(np.stack([self.connections[int(i), :, :] for i in right], axis=0)))
+        right_degrees = Variable(torch.FloatTensor([self.e1_degrees[int(i)] for i in right]))
         if torch.cuda.is_available():
             left_connections = left_connections.cuda()
             left_degrees = left_degrees.cuda()
