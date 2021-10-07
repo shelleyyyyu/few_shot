@@ -8,7 +8,7 @@ def read_options():
     parser.add_argument("--batch_size", default=128, type=int)
     parser.add_argument("--neg_num", default=1, type=int)
     parser.add_argument("--random_embed", action='store_true')
-    parser.add_argument("--train_few", default=30, type=int)
+    parser.add_argument("--train_few", default=3, type=int)
     parser.add_argument("--lr", default=0.001, type=float)
     parser.add_argument("--margin", default=5.0, type=float)
     parser.add_argument("--max_batches", default=1000, type=int)
