@@ -14,7 +14,7 @@ def read_options():
     parser.add_argument("--max_batches", default=1000, type=int)
     parser.add_argument("--dropout", default=0.2, type=float)
     parser.add_argument("--process_steps", default=2, type=int)
-    parser.add_argument("--log_every", default=50, type=int)
+    parser.add_argument("--log_every", default=5, type=int)
     parser.add_argument("--eval_every", default=50, type=int)
     parser.add_argument("--fine_tune", action='store_true')
     parser.add_argument("--aggregate", default='max', type=str)
