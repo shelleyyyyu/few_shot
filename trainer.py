@@ -235,7 +235,7 @@ class Trainer(object):
             # nn.utils.clip_grad_norm(self.parameters, self.grad_clip)
             self.optim.step()
 
-            if self.batch_nums % self.eval_every == 0:
+            if self.batch_nums!= 0 and self.batch_nums % self.eval_every == 0:
                 hits10, hits5, mrr = self.eval(meta=self.meta)
                 self.writer.add_scalar('HITS10', hits10, self.batch_nums)
                 self.writer.add_scalar('HITS5', hits5, self.batch_nums)
