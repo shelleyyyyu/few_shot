@@ -108,8 +108,8 @@ def train_generate(dataset, batch_size, few, symbol2id, ent2id, e1rel_e2):
         train_and_test = train_tasks[query]
         random.shuffle(train_and_test)
 
-        print('query: ', query)
-        print('len(candidates): ', len(candidates))
+        # print('query: ', query)
+        # print('len(candidates): ', len(candidates))
 
         # Reference
         support_triples = train_and_test[:few]
@@ -118,7 +118,7 @@ def train_generate(dataset, batch_size, few, symbol2id, ent2id, e1rel_e2):
         support_right = [ent2id[triple[2]] for triple in support_triples]
 
         all_test_triples = train_and_test[few:]
-        print('batch_size: ', batch_size)
+        # print('batch_size: ', batch_size)
         if len(all_test_triples) < batch_size:
             query_triples = [random.choice(all_test_triples) for _ in range(batch_size)]
         else:

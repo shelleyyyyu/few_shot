@@ -190,11 +190,11 @@ class Trainer(object):
             # 建立support; query三元組
             # 但是support query false 用symbol id表示 *_left; *_right;用rel2id; ent2id表示 (why?)
             support, query, false, support_left, support_right, query_left, query_right, false_left, false_right = data
-            print('*'*25)
-            print(support[0], support_left[0], support_right[0])
-            print(query[0], query_left[0], query_right[0])
-            print(false[0], false_left[0], false_right[0])
-            exit()
+            # print('*'*25)
+            # print(support[0], support_left[0], support_right[0])
+            # print(query[0], query_left[0], query_right[0])
+            # print(false[0], false_left[0], false_right[0])
+            # exit()
 
             # TODO more elegant solution
             support_meta = self.get_meta(support_left, support_right)
