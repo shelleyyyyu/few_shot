@@ -56,19 +56,60 @@ def train_generate(dataset, batch_size, few, symbol2id, ent2id, e1rel_e2):
     rel_idx = 0
 
     while True:
-        # if rel_idx % num_tasks == 0:
-        #     random.shuffle(task_pool)
-        query = task_pool[rel_idx % num_tasks]
+        if rel_idx % num_tasks == 0:
+            random.shuffle(task_pool)
+        idx = rel_idx % num_tasks
+        query = task_pool[idx]
         rel_idx += 1
         candidates = rel2candidates[query]
 
-        if len(candidates) <= 20:
-            # print 'not enough candidates'
-            continue
-
+        # if len(candidates) <= 20:
+        #     # print 'not enough candidates'
+        #     continue
+        # 0 排水量 665
+        # 1 职务 4250
+        # 2 别称 9930
+        # 3 成员 11205
+        # 4 负责人 5604
+        # 5 地址 1627
+        # 6 装载 5118
+        # 7 改型 4989
+        # 8 服役_时间 1080
+        # 9 军级 151
+        # 10 机构_别称 3803
+        # 11 续航_距离_及_射程 714
+        # 12 重量 853
+        # 13 出生地 1293
+        # 14 出生日期 427
+        # 15 创始人 308
+        # 16 前型 4153
+        # 17 长度 928
+        # 18 生产_时间 939
+        # 19 速度 824
+        # 20 专业_领域 408
+        # 21 配偶 1276
+        # 22 北约_代号 249
+        # 23 成立_时间 371
+        # 24 退役_时间 196
+        # 25 舰长 492
+        # 26 最高_学历 24
+        # 27 研制者 327
+        # 28 后代 490
+        # 29 党派 29
+        # 30 编号 640
+        # 31 作战_半径 48
+        # 32 获得_奖项 69
+        # 33 热点_地区 250
+        # 34 城市 323
+        # 35 毕业_院校 113
+        # 36 现_执政党 22
+        # 37 参政党 12
+        # 38 精度 5
         train_and_test = train_tasks[query]
+        random.shuffle(train_and_test)
 
-        # random.shuffle(train_and_test)
+        print('query: ', query)
+        print('len(candidates): ', len(candidates))
 
         # Reference
         support_triples = train_and_test[:few]
@@ -77,6 +118,7 @@ def train_generate(dataset, batch_size, few, symbol2id, ent2id, e1rel_e2):
         support_right = [ent2id[triple[2]] for triple in support_triples]
 
         all_test_triples = train_and_test[few:]
+        print('batch_size: ', batch_size)
         if len(all_test_triples) < batch_size:
             query_triples = [random.choice(all_test_triples) for _ in range(batch_size)]
         else:

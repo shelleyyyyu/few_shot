@@ -34,17 +34,9 @@ class Trainer(object):
             self.load_symbol2id()
             use_pretrain = False
         else:
-            # load pretrained embedding
             self.load_embed()
-        self.use_pretrain = use_pretrain
 
-        # if self.embed_model == 'RESCAL':
-        #     self.num_ents = len(self.ent2id.keys()) - 1
-        #     self.pad_id_ent = self.num_ents
-        #     self.num_rels = len(self.rel2id.keys()) - 1
-        #     self.pad_id_rel = self.num_rels
-        #     self.matcher = RescalMatcher(self.embed_dim, self.num_ents, self.num_rels, use_pretrain=self.use_pretrain, ent_embed=self.ent_embed, rel_matrices=self.rel_matrices,dropout=self.dropout, attn_layers=self.n_attn, n_head=self.n_head, batch_size=self.batch_size, process_steps=self.process_steps, finetune=self.fine_tune, aggregate=self.aggregate)
-        # else:
+        self.use_pretrain = use_pretrain
         self.num_symbols = len(self.symbol2id.keys()) - 1 # one for 'PAD'
         self.pad_id = self.num_symbols
         self.matcher = EmbedMatcher(self.embed_dim, self.num_symbols, use_pretrain=self.use_pretrain, embed=self.symbol2vec, dropout=self.dropout, batch_size=self.batch_size, process_steps=self.process_steps, finetune=self.fine_tune, aggregate=self.aggregate)
@@ -66,7 +58,7 @@ class Trainer(object):
         self.num_ents = len(self.ent2id.keys())
 
         logging.info('BUILDING CONNECTION MATRIX')
-        degrees = self.build_connection(max_=self.max_neighbor)
+        self.build_connection(max_=self.max_neighbor)
 
         logging.info('LOADING CANDIDATES ENTITIES')
         self.rel2candidates = json.load(open(self.dataset + '/rel2candidates.json'))
@@ -75,16 +67,6 @@ class Trainer(object):
         self.e1rel_e2 = json.load(open(self.dataset + '/e1rel_e2.json'))
 
     def load_symbol2id(self):
-
-        # if self.embed_model == 'RESCAL':
-        #     self.rel2id = json.load(open(self.dataset + '/relation2ids'))
-        #     self.ent2id = json.load(open(self.dataset + '/ent2ids'))
-
-        #     self.rel2id['PAD'] = len(self.rel2id.keys())
-        #     self.ent2id['PAD'] = len(self.ent2id.keys())
-        #     self.ent_embed = None
-        #     self.rel_matrices = None
-        #     return
         
         symbol_id = {}
         rel2id = json.load(open(self.dataset + '/relation2ids'))
@@ -106,18 +88,6 @@ class Trainer(object):
 
     def load_embed(self):
 
-        # if self.embed_model == 'RESCAL':
-        #     self.rel2id = json.load(open(self.dataset + '/relation2ids'))
-        #     self.ent2id = json.load(open(self.dataset + '/ent2ids'))
-        #     self.rel2id['PAD'] = len(self.rel2id.keys())
-        #     self.ent2id['PAD'] = len(self.ent2id.keys())
-        #     self.ent_embed = np.loadtxt(self.dataset + '/entity2vec.' + self.embed_model)
-        #     self.rel_matrices = np.loadtxt(self.dataset + '/relation2vec.' + self.embed_model)
-        #     self.ent_embed = np.concatenate((self.ent_embed, np.zeros((1,self.embed_dim))),axis=0)
-        #     self.rel_matrices = np.concatenate((self.rel_matrices, np.zeros((1, self.embed_dim * self.embed_dim))), axis=0)
-        #     return    
-
-
         symbol_id = {}
         rel2id = json.load(open(self.dataset + '/relation2ids'))
         ent2id = json.load(open(self.dataset + '/ent2ids'))
@@ -127,16 +97,6 @@ class Trainer(object):
             ent_embed = np.loadtxt(self.dataset + '/entity2vec.' + self.embed_model)
             rel_embed = np.loadtxt(self.dataset + '/relation2vec.' + self.embed_model)
 
-            if self.embed_model == 'ComplEx':
-                # normalize the complex embeddings
-                ent_mean = np.mean(ent_embed, axis=1, keepdims=True)
-                ent_std = np.std(ent_embed, axis=1, keepdims=True)
-                rel_mean = np.mean(rel_embed, axis=1, keepdims=True)
-                rel_std = np.std(rel_embed, axis=1, keepdims=True)
-                eps = 1e-3
-                ent_embed = (ent_embed - ent_mean) / (ent_std + eps)
-                rel_embed = (rel_embed - rel_mean) / (rel_std + eps)
-
             assert ent_embed.shape[0] == len(ent2id.keys())
             assert rel_embed.shape[0] == len(rel2id.keys())
 
@@ -145,24 +105,20 @@ class Trainer(object):
             for key in rel2id.keys():
                 if key not in ['','OOV']:
                     if key in symbol_id:
-                        print('ivy '+ key)
+                        print('duplicated relation: ' + key)
                         continue
                     symbol_id[key] = i
                     i += 1
                     embeddings.append(list(rel_embed[int(rel2id[key]),:]))
-                # else:
-                #     print('shelly '+ key)
 
             for key in ent2id.keys():
                 if key not in ['', 'OOV']:
                     if key in symbol_id:
-                        print('ivy '+ key)
+                        print('duplicated entity: ' + key)
                         continue
                     symbol_id[key] = i
                     i += 1
                     embeddings.append(list(ent_embed[int(ent2id[key]),:]))
-                # else:
-                #     print('shelly '+ key)
 
             symbol_id['PAD'] = i
 
@@ -175,27 +131,14 @@ class Trainer(object):
 
     def build_connection(self, max_=100):
 
-        # if self.embed_model == 'RESCAL':
-        #     self.connections = np.ones((self.num_ents, max_, 2)).astype(int)
-        #     self.connections[:,:,0] = self.pad_id_rel
-        #     self.connections[:,:,1] = self.pad_id_ent
-        #     self.e1_rele2 = defaultdict(list)
-        #     self.e1_degrees = defaultdict(int)
-        #     with open(self.dataset + '/path_graph') as f:
-        #         lines = f.readlines()
-        #         for line in tqdm(lines):
-        #             e1,rel,e2 = line.rstrip().split()
-        #             self.e1_rele2[e1].append((self.rel2id[rel], self.ent2id[e2]))
-        #             self.e1_rele2[e2].append((self.rel2id[rel+'_inv'], self.ent2id[e1]))  
-
-        # else:
         self.connections = (np.ones((self.num_ents, max_, 2)) * self.pad_id).astype(int)
+        print(len(self.connections), len(self.connections[0]), len(self.connections[0][0]))
         self.e1_rele2 = defaultdict(list)
         self.e1_degrees = defaultdict(int)
         with open(self.dataset + '/path_graph') as f:
             lines = f.readlines()
             for line in tqdm(lines):
-                e1,rel,e2 = line.rstrip().split()
+                e1, rel, e2 = line.rstrip().split()
                 self.e1_rele2[e1].append((self.symbol2id[rel], self.symbol2id[e2]))
                 #self.e1_rele2[e2].append((self.symbol2id[rel+'_inv'], self.symbol2id[e1]))
 
@@ -204,15 +147,13 @@ class Trainer(object):
             neighbors = self.e1_rele2[ent]
             if len(neighbors) > max_:
                 neighbors = neighbors[:max_]
-            # degrees.append(len(neighbors)) 
             degrees[ent] = len(neighbors)
             self.e1_degrees[id_] = len(neighbors) # add one for self conn
+
             for idx, _ in enumerate(neighbors):
                 self.connections[int(id_), idx, 0] = _[0]
-                self.connections[int(id_), idx, 1] = _[1]
-
-        # json.dump(degrees, open(self.dataset + '/degrees', 'w'))
-        # assert 1==2
+                #inversion ?!
+                # self.connections[int(id_), idx, 1] = _[1]
 
         return degrees
 
@@ -245,16 +186,15 @@ class Trainer(object):
         losses = deque([], self.log_every)
         margins = deque([], self.log_every)
 
-        # if self.embed_model == 'RESCAL':
-        #     self.symbol2id = self.ent2id
         for data in train_generate(self.dataset, self.batch_size, self.train_few, self.symbol2id, self.ent2id, self.e1rel_e2):
             # 建立support; query三元組
             # 但是support query false 用symbol id表示 *_left; *_right;用rel2id; ent2id表示 (why?)
             support, query, false, support_left, support_right, query_left, query_right, false_left, false_right = data
-            # print('*'*25)
-            # print(support[0], support_left[0], support_right[0])
-            # print(query[0], query_left[0], query_right[0])
-            # print(false[0], false_left[0], false_right[0])
+            print('*'*25)
+            print(support[0], support_left[0], support_right[0])
+            print(query[0], query_left[0], query_right[0])
+            print(false[0], false_left[0], false_right[0])
+            exit()
 
             # TODO more elegant solution
             support_meta = self.get_meta(support_left, support_right)
