@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -34,9 +33,17 @@ class Trainer(object):
             self.load_symbol2id()
             use_pretrain = False
         else:
+            # load pretrained embedding
             self.load_embed()
-
         self.use_pretrain = use_pretrain
+
+        # if self.embed_model == 'RESCAL':
+        #     self.num_ents = len(self.ent2id.keys()) - 1
+        #     self.pad_id_ent = self.num_ents
+        #     self.num_rels = len(self.rel2id.keys()) - 1
+        #     self.pad_id_rel = self.num_rels
+        #     self.matcher = RescalMatcher(self.embed_dim, self.num_ents, self.num_rels, use_pretrain=self.use_pretrain, ent_embed=self.ent_embed, rel_matrices=self.rel_matrices,dropout=self.dropout, attn_layers=self.n_attn, n_head=self.n_head, batch_size=self.batch_size, process_steps=self.process_steps, finetune=self.fine_tune, aggregate=self.aggregate)
+        # else:
         self.num_symbols = len(self.symbol2id.keys()) - 1 # one for 'PAD'
         self.pad_id = self.num_symbols
         self.matcher = EmbedMatcher(self.embed_dim, self.num_symbols, use_pretrain=self.use_pretrain, embed=self.symbol2vec, dropout=self.dropout, batch_size=self.batch_size, process_steps=self.process_steps, finetune=self.fine_tune, aggregate=self.aggregate)
@@ -58,15 +65,26 @@ class Trainer(object):
         self.num_ents = len(self.ent2id.keys())
 
         logging.info('BUILDING CONNECTION MATRIX')
-        self.build_connection(max_=self.max_neighbor)
+        degrees = self.build_connection(max_=self.max_neighbor)
 
         logging.info('LOADING CANDIDATES ENTITIES')
-        self.rel2candidates = json.load(open(self.dataset + '/rel2candidates.json'))
+        self.rel2candidates = json.load(open(self.dataset + '/rel2candidates.json')) 
+
         # load answer dict
         self.e1rel_e2 = defaultdict(list)
         self.e1rel_e2 = json.load(open(self.dataset + '/e1rel_e2.json'))
 
     def load_symbol2id(self):
+
+        # if self.embed_model == 'RESCAL':
+        #     self.rel2id = json.load(open(self.dataset + '/relation2ids'))
+        #     self.ent2id = json.load(open(self.dataset + '/ent2ids'))
+
+        #     self.rel2id['PAD'] = len(self.rel2id.keys())
+        #     self.ent2id['PAD'] = len(self.ent2id.keys())
+        #     self.ent_embed = None
+        #     self.rel_matrices = None
+        #     return
         
         symbol_id = {}
         rel2id = json.load(open(self.dataset + '/relation2ids'))
@@ -88,6 +106,18 @@ class Trainer(object):
 
     def load_embed(self):
 
+        # if self.embed_model == 'RESCAL':
+        #     self.rel2id = json.load(open(self.dataset + '/relation2ids'))
+        #     self.ent2id = json.load(open(self.dataset + '/ent2ids'))
+        #     self.rel2id['PAD'] = len(self.rel2id.keys())
+        #     self.ent2id['PAD'] = len(self.ent2id.keys())
+        #     self.ent_embed = np.loadtxt(self.dataset + '/entity2vec.' + self.embed_model)
+        #     self.rel_matrices = np.loadtxt(self.dataset + '/relation2vec.' + self.embed_model)
+        #     self.ent_embed = np.concatenate((self.ent_embed, np.zeros((1,self.embed_dim))),axis=0)
+        #     self.rel_matrices = np.concatenate((self.rel_matrices, np.zeros((1, self.embed_dim * self.embed_dim))), axis=0)
+        #     return    
+
+
         symbol_id = {}
         rel2id = json.load(open(self.dataset + '/relation2ids'))
         ent2id = json.load(open(self.dataset + '/ent2ids'))
@@ -97,6 +127,16 @@ class Trainer(object):
             ent_embed = np.loadtxt(self.dataset + '/entity2vec.' + self.embed_model)
             rel_embed = np.loadtxt(self.dataset + '/relation2vec.' + self.embed_model)
 
+            if self.embed_model == 'ComplEx':
+                # normalize the complex embeddings
+                ent_mean = np.mean(ent_embed, axis=1, keepdims=True)
+                ent_std = np.std(ent_embed, axis=1, keepdims=True)
+                rel_mean = np.mean(rel_embed, axis=1, keepdims=True)
+                rel_std = np.std(rel_embed, axis=1, keepdims=True)
+                eps = 1e-3
+                ent_embed = (ent_embed - ent_mean) / (ent_std + eps)
+                rel_embed = (rel_embed - rel_mean) / (rel_std + eps)
+
             assert ent_embed.shape[0] == len(ent2id.keys())
             assert rel_embed.shape[0] == len(rel2id.keys())
 
@@ -104,24 +144,20 @@ class Trainer(object):
             embeddings = []
             for key in rel2id.keys():
                 if key not in ['','OOV']:
-                    if key in symbol_id:
-                        print('duplicated relation: ' + key)
-                        continue
                     symbol_id[key] = i
                     i += 1
-                    embeddings.append(list(rel_embed[int(rel2id[key]),:]))
+                    embeddings.append(list(rel_embed[rel2id[key],:]))
 
             for key in ent2id.keys():
                 if key not in ['', 'OOV']:
-                    if key in symbol_id:
-                        print('duplicated entity: ' + key)
-                        continue
+                    # if key in symbol_id:
+                    #     print('duplicated entity: ' + key)
+                    #     continue
                     symbol_id[key] = i
                     i += 1
-                    embeddings.append(list(ent_embed[int(ent2id[key]),:]))
+                    embeddings.append(list(ent_embed[ent2id[key],:]))
 
             symbol_id['PAD'] = i
-
             embeddings.append(list(np.zeros((rel_embed.shape[1],))))
             embeddings = np.array(embeddings)
             assert embeddings.shape[0] == len(symbol_id.keys())
@@ -131,29 +167,44 @@ class Trainer(object):
 
     def build_connection(self, max_=100):
 
+        # if self.embed_model == 'RESCAL':
+        #     self.connections = np.ones((self.num_ents, max_, 2)).astype(int)
+        #     self.connections[:,:,0] = self.pad_id_rel
+        #     self.connections[:,:,1] = self.pad_id_ent
+        #     self.e1_rele2 = defaultdict(list)
+        #     self.e1_degrees = defaultdict(int)
+        #     with open(self.dataset + '/path_graph') as f:
+        #         lines = f.readlines()
+        #         for line in tqdm(lines):
+        #             e1,rel,e2 = line.rstrip().split()
+        #             self.e1_rele2[e1].append((self.rel2id[rel], self.ent2id[e2]))
+        #             self.e1_rele2[e2].append((self.rel2id[rel+'_inv'], self.ent2id[e1]))  
+
+        # else:
         self.connections = (np.ones((self.num_ents, max_, 2)) * self.pad_id).astype(int)
-        print(len(self.connections), len(self.connections[0]), len(self.connections[0][0]))
         self.e1_rele2 = defaultdict(list)
         self.e1_degrees = defaultdict(int)
         with open(self.dataset + '/path_graph') as f:
             lines = f.readlines()
             for line in tqdm(lines):
-                e1, rel, e2 = line.rstrip().split()
+                e1,rel,e2 = line.rstrip().split()
                 self.e1_rele2[e1].append((self.symbol2id[rel], self.symbol2id[e2]))
-                #self.e1_rele2[e2].append((self.symbol2id[rel+'_inv'], self.symbol2id[e1]))
+                self.e1_rele2[e2].append((self.symbol2id[rel], self.symbol2id[e1]))
 
         degrees = {}
         for ent, id_ in self.ent2id.items():
             neighbors = self.e1_rele2[ent]
             if len(neighbors) > max_:
                 neighbors = neighbors[:max_]
+            # degrees.append(len(neighbors)) 
             degrees[ent] = len(neighbors)
             self.e1_degrees[id_] = len(neighbors) # add one for self conn
-
             for idx, _ in enumerate(neighbors):
-                self.connections[int(id_), idx, 0] = _[0]
-                #inversion ?!
-                # self.connections[int(id_), idx, 1] = _[1]
+                self.connections[id_, idx, 0] = _[0]
+                self.connections[id_, idx, 1] = _[1]
+
+        # json.dump(degrees, open(self.dataset + '/degrees', 'w'))
+        # assert 1==2
 
         return degrees
 
@@ -166,16 +217,16 @@ class Trainer(object):
         self.matcher.load_state_dict(torch.load(self.save_path))
 
     def get_meta(self, left, right):
-        left_connections = Variable(
-            torch.LongTensor(np.stack([self.connections[int(i), :, :] for i in left], axis=0)))
-        left_degrees = Variable(torch.FloatTensor([self.e1_degrees[int(i)] for i in left]))
-        right_connections = Variable(torch.LongTensor(np.stack([self.connections[int(i), :, :] for i in right], axis=0)))
-        right_degrees = Variable(torch.FloatTensor([self.e1_degrees[int(i)] for i in right]))
         if torch.cuda.is_available():
-            left_connections = left_connections.cuda()
-            left_degrees = left_degrees.cuda()
-            right_connections = right_connections.cuda()
-            right_degrees = right_degrees.cuda()
+            left_connections = Variable(torch.LongTensor(np.stack([self.connections[_,:,:] for _ in left], axis=0))).cuda()
+            left_degrees = Variable(torch.FloatTensor([self.e1_degrees[_] for _ in left])).cuda()
+            right_connections = Variable(torch.LongTensor(np.stack([self.connections[_,:,:] for _ in right], axis=0))).cuda()
+            right_degrees = Variable(torch.FloatTensor([self.e1_degrees[_] for _ in right])).cuda()
+        else:
+            left_connections = Variable(torch.LongTensor(np.stack([self.connections[_,:,:] for _ in left], axis=0)))
+            left_degrees = Variable(torch.FloatTensor([self.e1_degrees[_] for _ in left]))
+            right_connections = Variable(torch.LongTensor(np.stack([self.connections[_,:,:] for _ in right], axis=0)))
+            right_degrees = Variable(torch.FloatTensor([self.e1_degrees[_] for _ in right]))
         return (left_connections, left_degrees, right_connections, right_degrees)
 
     def train(self):
@@ -186,34 +237,26 @@ class Trainer(object):
         losses = deque([], self.log_every)
         margins = deque([], self.log_every)
 
+        # if self.embed_model == 'RESCAL':
+        #     self.symbol2id = self.ent2id
+
         for data in train_generate(self.dataset, self.batch_size, self.train_few, self.symbol2id, self.ent2id, self.e1rel_e2):
-            # 建立support; query三元組
-            # 但是support query false 用symbol id表示 *_left; *_right;用rel2id; ent2id表示 (why?)
+
             support, query, false, support_left, support_right, query_left, query_right, false_left, false_right = data
-            # print('*'*25)
-            # print(support[0], support_left[0], support_right[0])
-            # print(query[0], query_left[0], query_right[0])
-            # print(false[0], false_left[0], false_right[0])
-            # exit()
 
             # TODO more elegant solution
             support_meta = self.get_meta(support_left, support_right)
             query_meta = self.get_meta(query_left, query_right)
             false_meta = self.get_meta(false_left, false_right)
-            # print(support_meta[0][0])
-            # print(support_meta[1])
-            # print(support_meta[2][0])
-            # print(support_meta[3])
-            #print(query_meta)
-            #print(false_meta)
 
-            support = Variable(torch.LongTensor(support))
-            query = Variable(torch.LongTensor(query))
-            false = Variable(torch.LongTensor(false))
             if torch.cuda.is_available():
-                support = support.cuda()
-                query = query.cuda()
-                false = false.cuda()
+                support = Variable(torch.LongTensor(support)).cuda()
+                query = Variable(torch.LongTensor(query)).cuda()
+                false = Variable(torch.LongTensor(false)).cuda()
+            else:
+                support = Variable(torch.LongTensor(support))
+                query = Variable(torch.LongTensor(query))
+                false = Variable(torch.LongTensor(false))
 
             if self.no_meta:
             # for ablation
@@ -227,7 +270,6 @@ class Trainer(object):
             margins.append(margin_.mean().item())
             loss = F.relu(self.margin - margin_).mean()
             self.writer.add_scalar('MARGIN', np.mean(margins), self.batch_nums)
-
             losses.append(loss.item())
 
             self.optim.zero_grad()
@@ -235,7 +277,7 @@ class Trainer(object):
             # nn.utils.clip_grad_norm(self.parameters, self.grad_clip)
             self.optim.step()
 
-            if self.batch_nums!= 0 and self.batch_nums % self.eval_every == 0:
+            if self.batch_nums != 0 and self.batch_nums % self.eval_every == 0:
                 hits10, hits5, mrr = self.eval(meta=self.meta)
                 self.writer.add_scalar('HITS10', hits10, self.batch_nums)
                 self.writer.add_scalar('HITS5', hits5, self.batch_nums)
@@ -255,7 +297,7 @@ class Trainer(object):
 
             if self.batch_nums % self.log_every == 0:
                 # self.save()
-                # logging.info('AVG. BATCH_LOSS: {.2f} AT STEP {}'.format(np.mean(losses), self.batch_nums))
+                logging.info('AVG. BATCH_LOSS: %.4f AT STEP %d'%(float(np.mean(losses)), self.batch_nums))
                 self.writer.add_scalar('Avg_batch_loss', np.mean(losses), self.batch_nums)
 
 
@@ -266,17 +308,17 @@ class Trainer(object):
                 break
 
 
-    def eval(self, mode='test', meta=False):
+    def eval(self, mode='dev', meta=False):
         self.matcher.eval()
 
         symbol2id = self.symbol2id
         few = self.few
 
         logging.info('EVALUATING ON %s DATA' % mode.upper())
-        #if mode == 'dev':
-        #    test_tasks = json.load(open(self.dataset + '/dev_tasks.json'))
-        #else:
-        test_tasks = json.load(open(self.dataset + '/test_tasks.json'))
+        if mode == 'dev':
+            test_tasks = json.load(open(self.dataset + '/dev_tasks.json'))
+        else:
+            test_tasks = json.load(open(self.dataset + '/test_tasks.json'))
         
         rel2candidates = self.rel2candidates
 
@@ -301,6 +343,7 @@ class Trainer(object):
                 support_right = [self.ent2id[triple[2]] for triple in support_triples]
                 support_meta = self.get_meta(support_left, support_right)
 
+
             support = Variable(torch.LongTensor(support_pairs))
             if torch.cuda.is_available():
                 support = support.cuda()
@@ -323,10 +366,10 @@ class Trainer(object):
                             query_left.append(self.ent2id[triple[0]])
                             query_right.append(self.ent2id[ent])
 
+
                 query = Variable(torch.LongTensor(query_pairs))
                 if torch.cuda.is_available():
                     query = query.cuda()
-
                 if meta:
                     query_meta = self.get_meta(query_left, query_right)
                     scores = self.matcher(query, support, query_meta, support_meta)
@@ -391,8 +434,7 @@ if __name__ == '__main__':
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s %(levelname)s: - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-    if not os.path.exists('./logs_/'):
-        os.mkdir('./logs_/')
+
     fh = logging.FileHandler('./logs_/log-{}.txt'.format(args.prefix))
     fh.setLevel(logging.DEBUG)
     fh.setFormatter(formatter)

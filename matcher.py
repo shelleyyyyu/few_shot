@@ -53,7 +53,6 @@ class EmbedMatcher(nn.Module):
         concat_embeds = torch.cat((rel_embeds, ent_embeds), dim=-1) # (batch, 200, 2*embed_dim)
 
         out = self.gcn_w(concat_embeds)
-
         out = torch.sum(out, dim=1) # (batch, embed_dim)
         out = out / num_neighbors
         return out.tanh()

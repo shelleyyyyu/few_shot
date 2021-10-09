@@ -35,8 +35,8 @@ from time import time
 #     json.dump(entid, open(dataset + '/ent2ids', 'w', encoding='utf-8'), ensure_ascii=False)
 
 def build_vocab(dataset):
-    rels = set()
-    ents = set()
+    # rels = set()
+    # ents = set()
 
     # with open(dataset + '/path_graph') as f:
     #     lines = f.readlines()
@@ -58,7 +58,7 @@ def build_vocab(dataset):
             if len(item.strip().split('\t')) != 2:
                 continue
             name = item.strip().split('\t')[0]
-            id = item.strip().split('\t')[1]
+            id = int(item.strip().split('\t')[1])
             relationid[name] = id
 
     entid = {}
@@ -68,7 +68,7 @@ def build_vocab(dataset):
             if len(item.strip().split('\t')) != 2:
                 continue
             name = item.strip().split('\t')[0]
-            id = item.strip().split('\t')[1]
+            id = int(item.strip().split('\t')[1])
             entid[name] = id
 
     json.dump(relationid, open(dataset + '/relation2ids', 'w', encoding='utf-8'), ensure_ascii=False)
@@ -267,7 +267,7 @@ def candidate_triples_backup(dataset):
         candidates = []
         for type_ in possible_types:
             candidates += list(type2ents[type_])
-        
+
         rel2candidates[rel] = list(set(candidates))
 
     json.dump(rel2candidates, open(dataset + '/rel2candidates.json', 'w'))
