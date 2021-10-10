@@ -150,9 +150,9 @@ class Trainer(object):
 
             for key in ent2id.keys():
                 if key not in ['', 'OOV']:
-                    # if key in symbol_id:
-                    #     print('duplicated entity: ' + key)
-                    #     continue
+                    if key in symbol_id:
+                        print('duplicated entity: ' + key)
+                        continue
                     symbol_id[key] = i
                     i += 1
                     embeddings.append(list(ent_embed[ent2id[key],:]))
