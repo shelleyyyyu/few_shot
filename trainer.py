@@ -317,11 +317,14 @@ class Trainer(object):
         few = self.few
 
         logging.info('EVALUATING ON %s DATA' % mode.upper())
-        if mode == 'dev':
-            test_tasks = json.load(open(self.dataset + '/dev_tasks.json'))
-        else:
-            test_tasks = json.load(open(self.dataset + '/test_tasks.json'))
-        
+        # if mode == 'dev':
+        #     test_tasks = json.load(open(self.dataset + '/dev_tasks.json'))
+        # else:
+        test_support_tasks = json.load(open(self.dataset + '/test_tasks_support.json'))
+        test_query_tasks = json.load(open(self.dataset + '/test_tasks_query.json'))
+
+        assert len(test_support_tasks.keys()) == len(test_query_tasks.keys())
+
         rel2candidates = self.rel2candidates
 
         hits10 = []
@@ -329,7 +332,7 @@ class Trainer(object):
         hits1 = []
         mrr = []
 
-        for query_ in test_tasks.keys():
+        for query_ in test_support_tasks.keys():
 
             hits10_ = []
             hits5_ = []
@@ -337,7 +340,7 @@ class Trainer(object):
             mrr_ = []
 
             candidates = rel2candidates[query_]
-            support_triples = test_tasks[query_][:few]
+            support_triples = test_support_tasks[query_] #test_tasks[query_][:few]
             support_pairs = [[symbol2id[triple[0]], symbol2id[triple[2]]] for triple in support_triples]
 
             if meta:
@@ -350,7 +353,7 @@ class Trainer(object):
             if torch.cuda.is_available():
                 support = support.cuda()
 
-            for triple in test_tasks[query_][few:]:
+            for triple in test_query_tasks[query_][few:]:
                 true = triple[2]
                 query_pairs = []
                 query_pairs.append([symbol2id[triple[0]], symbol2id[triple[2]]])
