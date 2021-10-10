@@ -329,7 +329,7 @@ def candidate_triples(dataset):
     json.dump(rel2candidates, open(dataset + '/rel2candidates.json', 'w'), ensure_ascii=False)
 
 def convert_vec(dataset):
-    with open(dataset + '/transe.save.parameter.json') as f:
+    with open(dataset + '/transe.parameter.json') as f:
         data = json.load(f)
         for key in data.keys():
             if key == 'ent_embeddings.weight':
@@ -363,7 +363,8 @@ if __name__ == '__main__':
     for_filtering(DATASET, save=True)
     # rel2candidates.json
     candidate_triples(DATASET)
-    print('Time clipse: ', time() - start)
     build_vocab(DATASET)
     convert_vec(DATASET)
+    print('Time eclipse: ', time() - start)
+
 
