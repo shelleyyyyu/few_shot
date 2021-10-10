@@ -340,7 +340,9 @@ class Trainer(object):
             mrr_ = []
 
             candidates = rel2candidates[query_]
-            support_triples = test_support_tasks[query_] #test_tasks[query_][:few]
+            all_support_triples = test_support_tasks[query_]
+            random.shuffle(all_support_triples)
+            support_triples = all_support_triples[:few]#test_tasks[query_][:few]
             support_pairs = [[symbol2id[triple[0]], symbol2id[triple[2]]] for triple in support_triples]
 
             if meta:
