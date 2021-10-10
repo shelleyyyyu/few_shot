@@ -189,7 +189,7 @@ class Trainer(object):
             for line in tqdm(lines):
                 e1,rel,e2 = line.rstrip().split()
                 self.e1_rele2[e1].append((self.symbol2id[rel], self.symbol2id[e2]))
-                self.e1_rele2[e2].append((self.symbol2id[rel], self.symbol2id[e1]))
+                #self.e1_rele2[e2].append((self.symbol2id[rel+'_inv'], self.symbol2id[e1]))
 
         degrees = {}
         for ent, id_ in self.ent2id.items():
