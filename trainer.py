@@ -309,6 +309,8 @@ class Trainer(object):
 
 
     def eval(self, mode='dev', meta=False):
+        #TODO- remove the testing setting
+        mode='test'
         self.matcher.eval()
 
         symbol2id = self.symbol2id
