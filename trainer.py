@@ -332,8 +332,7 @@ class Trainer(object):
         hits1 = []
         mrr = []
 
-        for query_ in ['所属_国家', '使用_国家', '国籍', '对手', '同盟']:#test_support_tasks.keys():
-
+        for query_ in test_support_tasks.keys():
             hits10_ = []
             hits5_ = []
             hits1_ = []
