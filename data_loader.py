@@ -42,7 +42,7 @@ def train_generate_simple(dataset, batch_size, few, symbol2id):
 
         yield support_pairs, query_pairs, false_pairs
 
-def train_generate(dataset, batch_size, few, symbol2id, ent2id, e1rel_e2):
+def train_generate(dataset, batch_size, few, symbol2id, ent2id, e1rel_e2, num_neg=1):
     logging.info('LOADING TRAINING DATA')
     train_tasks = json.load(open(dataset + '/train_tasks.json'))
     logging.info('LOADING CANDIDATES')

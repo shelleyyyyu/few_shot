@@ -34,71 +34,6 @@ from time import time
 #     json.dump(relationid, open(dataset + '/relation2ids', 'w', encoding='utf-8'), ensure_ascii=False)
 #     json.dump(entid, open(dataset + '/ent2ids', 'w', encoding='utf-8'), ensure_ascii=False)
 
-def build_vocab(dataset):
-    # rels = set()
-    # ents = set()
-
-    # with open(dataset + '/path_graph') as f:
-    #     lines = f.readlines()
-    #     for line in lines:
-    #         line = line.rstrip()
-    #         #e1 rel e2
-    #         rel = line.split('\t')[1]
-    #         e1 = line.split('\t')[0]
-    #         e2 = line.split('\t')[2]
-    #         rels.add(rel)
-    #         rels.add(rel + '_inv')
-    #         ents.add(e1)
-    #         ents.add(e2)
-
-    relationid = {}
-    with open(dataset + '/rel2id.txt', 'r', encoding='utf-8') as f:
-        data = f.readlines()
-        for item in list(data):
-            if len(item.strip().split('\t')) != 2:
-                continue
-            name = item.strip().split('\t')[0]
-            id = int(item.strip().split('\t')[1])
-            relationid[name] = id
-
-    entid = {}
-    with open(dataset + '/entity2id.txt', 'r', encoding='utf-8') as f:
-        data = f.readlines()
-        for item in list(data):
-            if len(item.strip().split('\t')) != 2:
-                continue
-            name = item.strip().split('\t')[0]
-            id = int(item.strip().split('\t')[1])
-            entid[name] = id
-
-    json.dump(relationid, open(dataset + '/relation2ids', 'w', encoding='utf-8'), ensure_ascii=False)
-    json.dump(entid, open(dataset + '/ent2ids', 'w', encoding='utf-8'), ensure_ascii=False)
-
-def for_filtering(dataset, save=False):
-    e1rel_e2 = defaultdict(list)
-    train_tasks = json.load(open(dataset + '/train_tasks.json'))
-    dev_tasks = json.load(open(dataset + '/dev_tasks.json'))
-    test_tasks = json.load(open(dataset + '/test_tasks.json'))
-    few_triples = []
-    for _ in (list(train_tasks.values()) + list(dev_tasks.values()) + list(test_tasks.values())):
-        few_triples += _
-    for triple in few_triples:
-        e1,rel,e2 = triple
-        e1rel_e2[e1+rel].append(e2)
-
-    clean_e1rel_e2 = defaultdict(list)
-    for key in e1rel_e2:
-        tmp = []
-
-        for x in e1rel_e2[key]:
-            if x not in tmp:
-                tmp.append(x)
-
-        clean_e1rel_e2[key] = tmp
-
-    if save:
-        json.dump(clean_e1rel_e2, open(dataset + '/e1rel_e2.json', 'w', encoding='utf-8'), ensure_ascii=False)
-
 # def combine_vocab(rel2id_path, ent2id_path, symbol2id_path):
 #     symbol_id = {}
 #
@@ -215,67 +150,118 @@ def for_filtering(dataset, save=False):
 #     json.dump(dev_tasks_, open(dataset + '/dev_tasks.json', 'w'))
 #     json.dump(test_tasks_, open(dataset + '/test_tasks.json', 'w'))
 
-def candidate_triples_backup(dataset):
-    '''
-    build candiate tail entities for every relation
-    '''
-    # calculate node degrees
-    # with open(dataset + '/path_graph') as f:
-    #     for line in f:
-    #         line = line.rstrip()
-    #         e1 = line.split('\t')[0]
-    #         e2 = line.split('\t')[2]
+# def candidate_triples_backup(dataset):
+#     '''
+#     build candiate tail entities for every relation
+#     '''
+#     # calculate node degrees
+#     # with open(dataset + '/path_graph') as f:
+#     #     for line in f:
+#     #         line = line.rstrip()
+#     #         e1 = line.split('\t')[0]
+#     #         e2 = line.split('\t')[2]
+#
+#     ent2ids = json.load(open(dataset+'/ent2ids'))
+#
+#     all_entities = ent2ids.keys()
+#
+#     type2ents = defaultdict(set)
+#     for ent in all_entities:
+#         try:
+#             type_ = ent.split(':')[1]
+#             type2ents[type_].add(ent)
+#         except Exception as e:
+#             continue
+#
+#     train_tasks = json.load(open(dataset + '/train_tasks.json'))
+#     #train_tasks = json.load(open(dataset + '/known_rels.json'))
+#     dev_tasks = json.load(open(dataset + '/dev_tasks.json'))
+#     test_tasks = json.load(open(dataset + '/test_tasks.json'))
+#
+#     all_reason_relations = list(train_tasks.keys()) + list(dev_tasks.keys()) + list(test_tasks.keys())
+#
+#     all_reason_relation_triples = list(train_tasks.values()) + list(dev_tasks.values()) + list(test_tasks.values())
+#
+#     assert len(all_reason_relations) == len(all_reason_relation_triples)
+#
+#     rel2candidates = {}
+#     for rel, triples in zip(all_reason_relations, all_reason_relation_triples):
+#
+#         possible_types = set()
+#         for example in triples:
+#             try:
+#                 print(example[0].split(':'))
+#                 print(example[1].split(':'))
+#                 print(example[2].split(':'))
+#                 exit()
+#                 type_ = example[2].split(':')[1] # type of tail entity
+#                 possible_types.add(type_)
+#             except Exception as e:
+#                 print(e)
+#
+#         candidates = []
+#         for type_ in possible_types:
+#             candidates += list(type2ents[type_])
+#
+#         rel2candidates[rel] = list(set(candidates))
+#
+#     json.dump(rel2candidates, open(dataset + '/rel2candidates.json', 'w'))
 
-    ent2ids = json.load(open(dataset+'/ent2ids'))
+def build_vocab(dataset):
+    relationid = {}
+    with open(dataset + '/relation2id.txt', 'r', encoding='utf-8') as f:
+        data = f.readlines()
+        for item in list(data):
+            if len(item.strip().split('\t')) != 2:
+                continue
+            name = item.strip().split('\t')[0]
+            id = int(item.strip().split('\t')[1])
+            relationid[name] = id
 
-    all_entities = ent2ids.keys()
+    entid = {}
+    with open(dataset + '/entity2id.txt', 'r', encoding='utf-8') as f:
+        data = f.readlines()
+        for item in list(data):
+            if len(item.strip().split('\t')) != 2:
+                continue
+            name = item.strip().split('\t')[0]
+            id = int(item.strip().split('\t')[1])
+            entid[name] = id
 
-    type2ents = defaultdict(set)
-    for ent in all_entities:
-        try:
-            type_ = ent.split(':')[1]
-            type2ents[type_].add(ent)
-        except Exception as e:
-            continue
+    json.dump(relationid, open(dataset + '/relation2ids', 'w', encoding='utf-8'), ensure_ascii=False)
+    json.dump(entid, open(dataset + '/ent2ids', 'w', encoding='utf-8'), ensure_ascii=False)
 
+def for_filtering(dataset, save=False):
+    e1rel_e2 = defaultdict(list)
     train_tasks = json.load(open(dataset + '/train_tasks.json'))
-    #train_tasks = json.load(open(dataset + '/known_rels.json'))
     dev_tasks = json.load(open(dataset + '/dev_tasks.json'))
-    test_tasks = json.load(open(dataset + '/test_tasks.json'))
+    test_query_tasks = json.load(open(dataset + '/test_tasks_query.json'))
+    test_support_tasks = json.load(open(dataset + '/test_tasks_support.json'))
 
-    all_reason_relations = list(train_tasks.keys()) + list(dev_tasks.keys()) + list(test_tasks.keys())
+    few_triples = []
+    for _ in (list(train_tasks.values()) + list(test_query_tasks.values())):#+ list(dev_tasks.values()) + list(test_tasks.values())):
+        few_triples += _
 
-    all_reason_relation_triples = list(train_tasks.values()) + list(dev_tasks.values()) + list(test_tasks.values())
+    for triple in few_triples:
+        e1,rel,e2 = triple
+        e1rel_e2[e1+rel].append(e2)
 
-    assert len(all_reason_relations) == len(all_reason_relation_triples)
+    clean_e1rel_e2 = defaultdict(list)
+    for key in e1rel_e2:
+        tmp = []
 
-    rel2candidates = {}
-    for rel, triples in zip(all_reason_relations, all_reason_relation_triples):
+        for x in e1rel_e2[key]:
+            if x not in tmp:
+                tmp.append(x)
 
-        possible_types = set()
-        for example in triples:
-            try:
-                print(example[0].split(':'))
-                print(example[1].split(':'))
-                print(example[2].split(':'))
-                exit()
-                type_ = example[2].split(':')[1] # type of tail entity
-                possible_types.add(type_)
-            except Exception as e:
-                print(e)
+        clean_e1rel_e2[key] = tmp
 
-        candidates = []
-        for type_ in possible_types:
-            candidates += list(type2ents[type_])
-
-        rel2candidates[rel] = list(set(candidates))
-
-    json.dump(rel2candidates, open(dataset + '/rel2candidates.json', 'w'))
-
+    if save:
+        json.dump(clean_e1rel_e2, open(dataset + '/e1rel_e2.json', 'w', encoding='utf-8'), ensure_ascii=False)
 
 def candidate_triples(dataset):
     '''
-    build candiate tail entities for every relation
+    build candidate tail entities for every relation
     '''
     # calculate node degrees
     type2ents = defaultdict(set)
@@ -287,42 +273,32 @@ def candidate_triples(dataset):
             e2 = line.split('\t')[2]
             type2ents[rel].add(e2)
 
-    # ent2ids = json.load(open(dataset + '/ent2ids'))
-    # all_entities = ent2ids.keys()
-    # type2ents = defaultdict(set)
-    # for ent in all_entities:
-    #     try:
-    #         type_ = ent.split(':')[1]
-    #         type2ents[type_].add(ent)
-    #     except Exception as e:
-    #         continue
-
     train_tasks = json.load(open(dataset + '/train_tasks.json'))
-    # train_tasks = json.load(open(dataset + '/known_rels.json'))
-    dev_tasks = json.load(open(dataset + '/dev_tasks.json'))
-    test_tasks = json.load(open(dataset + '/test_tasks.json'))
+    # dev_tasks = json.load(open(dataset + '/dev_tasks.json'))
+    # test_query_tasks = json.load(open(dataset + '/test_tasks_query.json'))
+    # test_support_tasks = json.load(open(dataset + '/test_tasks_support.json'))
+    #
+    all_reason_relations = list(train_tasks.keys()) #+ list(dev_tasks.keys()) #+ list(test_tasks.keys())
+    # all_reason_relation_triples = list(train_tasks.values())+ list(test_query_tasks.values()) #+ list(dev_tasks.values()) #+ list(test_tasks.values())
 
-    all_reason_relations = list(train_tasks.keys()) + list(dev_tasks.keys()) + list(test_tasks.keys())
-
-    all_reason_relation_triples = list(train_tasks.values()) + list(dev_tasks.values()) + list(test_tasks.values())
-
-    assert len(all_reason_relations) == len(all_reason_relation_triples)
+    #assert len(all_reason_relations) == len(all_reason_relation_triples)
 
     rel2candidates = {}
-    for rel, triples in zip(all_reason_relations, all_reason_relation_triples):
+    for rel in all_reason_relations:
+        # possible_types = set()
+        # for example in all_reason_relation_triples:
+        #     # ['s400_雷达_系统', '使用_国家', '俄罗斯']
+        #     try:
+        #         print(example)
+        #         exit()
+        #         type_ = example[1] # type of tail entity
+        #         possible_types.add(type_)
+        #     except Exception as e:
+        #         print(e)
 
-        possible_types = set()
-        for example in triples:
-            try:
-                type_ = example[1] # type of tail entity
-                possible_types.add(type_)
-            except Exception as e:
-                print(e)
-
-        candidates = []
-        for type_ in possible_types:
-            candidates += list(type2ents[type_])
-
+        # candidates = []
+        # for type_ in possible_types:
+        candidates = list(type2ents[rel])
         rel2candidates[rel] = list(set(candidates))
         print(rel, len(list(set(candidates))))
 
@@ -352,8 +328,6 @@ def convert_vec(dataset):
                 else:
                     f.write(str(e) + '\t')
 
-
-
 if __name__ == '__main__':
     start = time()
     DATASET  = './ARMY'
@@ -363,7 +337,7 @@ if __name__ == '__main__':
     for_filtering(DATASET, save=True)
     # rel2candidates.json
     candidate_triples(DATASET)
-    build_vocab(DATASET)
+    # Convert Embedding
     convert_vec(DATASET)
     print('Time eclipse: ', time() - start)
 
