@@ -307,7 +307,6 @@ class Trainer(object):
                 self.save()
                 break
 
-
     def eval(self, mode='dev', meta=False):
         #TODO- remove the testing setting
         mode='test'
@@ -338,7 +337,7 @@ class Trainer(object):
             hits1_ = []
             mrr_ = []
 
-            candidates = rel2candidates[query_]
+            total_candidates = rel2candidates[query_]
             all_support_triples = test_support_tasks[query_]
             random.shuffle(all_support_triples)
             support_triples = all_support_triples[:few]#test_tasks[query_][:few]
@@ -355,7 +354,17 @@ class Trainer(object):
                 support = support.cuda()
 
             for triple in test_query_tasks[query_]:
+                # Trick choose 100 entity as candidate
+                sample_cnt = 100
+                if len(total_candidates) < 100:
+                    sample_cnt = len(total_candidates)
+                candidates = random.sample(total_candidates, sample_cnt)
                 true = triple[2]
+                if true not in candidates:
+                    candidates = candidates[1:]
+                    candidates.append(true)
+                print(triple, len(candidates))
+
                 query_pairs = []
                 query_pairs.append([symbol2id[triple[0]], symbol2id[triple[2]]])
 
