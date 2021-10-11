@@ -355,7 +355,7 @@ class Trainer(object):
             if torch.cuda.is_available():
                 support = support.cuda()
 
-            for triple in test_query_tasks[query_][few:]:
+            for triple in test_query_tasks[query_]:
                 true = triple[2]
                 query_pairs = []
                 query_pairs.append([symbol2id[triple[0]], symbol2id[triple[2]]])
