@@ -328,17 +328,57 @@ def convert_vec(dataset):
                 else:
                     f.write(str(e) + '\t')
 
+def convert_quate_vec(dataset):
+    with open(dataset + '/QuatE.json') as f:
+        data = json.load(f)
+        # dict_keys(
+        #     ['emb_s_a.weight', 'emb_x_a.weight', 'emb_y_a.weight', 'emb_z_a.weight', 'rel_s_b.weight', 'rel_x_b.weight',
+        #      'rel_y_b.weight', 'rel_z_b.weight', 'rel_w.weight', 'fc.weight', 'bn.weight', 'bn.bias', 'bn.running_mean',
+        #      'bn.running_var', 'bn.num_batches_tracked'])
+        ent_embeddings = data['emb_s_a.weight']
+        rel_embeddings = data['rel_s_b.weight']
+
+    with open(dataset + '/entity2vec.QuatE', 'w', encoding='utf-8') as f:
+        for emb in ent_embeddings:
+            for idx, e in enumerate(list(emb)):
+                if idx == len(list(emb))-1:
+                    f.write(str(e)+'\n')
+                else:
+                    f.write(str(e)+'\t')
+
+    with open(dataset + '/relation2vec.QuatE', 'w', encoding='utf-8') as f:
+        for emb in rel_embeddings:
+            for idx, e in enumerate(list(emb)):
+                if idx == len(list(emb)) - 1:
+                    f.write(str(e) + '\n')
+                else:
+                    f.write(str(e) + '\t')
+
 if __name__ == '__main__':
     start = time()
-    DATASET  = './ARMY'
-    #build ent2ids rel2ids
-    build_vocab(DATASET)
-    # build e1rel_e2.json
-    for_filtering(DATASET, save=True)
-    # rel2candidates.json
-    candidate_triples(DATASET)
-    # Convert Embedding
-    convert_vec(DATASET)
-    print('Time eclipse: ', time() - start)
+
+    PRETRAIN_TYPE = 'QuatE'
+    if PRETRAIN_TYPE == 'TransE':
+        #build ent2ids rel2ids
+        DATASET = './ARMY'
+        build_vocab(DATASET)
+        # build e1rel_e2.json
+        for_filtering(DATASET, save=True)
+        # rel2candidates.json
+        candidate_triples(DATASET)
+        # Convert Embedding
+        convert_vec(DATASET)
+        print('Time eclipse: ', time() - start)
+    elif PRETRAIN_TYPE == 'QuatE':
+        #build ent2ids rel2ids
+        DATASET = './ARMY_QuatE'
+        build_vocab(DATASET)
+        # build e1rel_e2.json
+        for_filtering(DATASET, save=True)
+        # rel2candidates.json
+        candidate_triples(DATASET)
+        # Convert Embedding
+        convert_quate_vec(DATASET)
+        print('Time eclipse: ', time() - start)
 
 
