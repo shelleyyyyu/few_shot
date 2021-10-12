@@ -232,7 +232,7 @@ class Trainer(object):
     def train(self):
         logging.info('START TRAINING...')
 
-        best_hits10 = 0.0
+        best_hits1 = 0.0
 
         losses = deque([], self.log_every)
         margins = deque([], self.log_every)
@@ -278,16 +278,16 @@ class Trainer(object):
             self.optim.step()
 
             if self.batch_nums != 0 and self.batch_nums % self.eval_every == 0:
-                hits10, hits5, mrr = self.eval(meta=self.meta)
+                hits10, hits5, hits1, mrr = self.eval(meta=self.meta)
                 self.writer.add_scalar('HITS10', hits10, self.batch_nums)
                 self.writer.add_scalar('HITS5', hits5, self.batch_nums)
                 self.writer.add_scalar('MAP', mrr, self.batch_nums)
 
                 self.save()
 
-                if hits10 > best_hits10:
+                if hits1 > best_hits1:
                     self.save(self.save_path + '_bestHits10')
-                    best_hits10 = hits10
+                    best_hits1 = hits1
 
                 # if self.batch_nums % (4 * self.eval_every) == 0:
                 #     hits10_, hits5_, mrr_ = self.eval(meta=self.meta, mode='test')
@@ -435,7 +435,7 @@ class Trainer(object):
 
         self.matcher.train()
 
-        return np.mean(hits10), np.mean(hits5), np.mean(mrr)
+        return np.mean(hits10), np.mean(hits5), np.mean(hits1), np.mean(mrr)
 
     def test_(self):
         self.load()
