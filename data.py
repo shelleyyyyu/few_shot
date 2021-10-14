@@ -357,7 +357,7 @@ def convert_quate_vec(dataset):
 if __name__ == '__main__':
     start = time()
 
-    PRETRAIN_TYPE = 'QuatE'
+    PRETRAIN_TYPE = 'QuatE_v2'
     if PRETRAIN_TYPE == 'TransE':
         #build ent2ids rel2ids
         DATASET = './ARMY'
@@ -372,6 +372,17 @@ if __name__ == '__main__':
     elif PRETRAIN_TYPE == 'QuatE':
         #build ent2ids rel2ids
         DATASET = './ARMY_QuatE'
+        build_vocab(DATASET)
+        # build e1rel_e2.json
+        for_filtering(DATASET, save=True)
+        # rel2candidates.json
+        candidate_triples(DATASET)
+        # Convert Embedding
+        convert_quate_vec(DATASET)
+        print('Time eclipse: ', time() - start)
+    elif PRETRAIN_TYPE == 'QuatE_v2':
+        #build ent2ids rel2ids
+        DATASET = './ARMY_QuatE_v2'
         build_vocab(DATASET)
         # build e1rel_e2.json
         for_filtering(DATASET, save=True)
