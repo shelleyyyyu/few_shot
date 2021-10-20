@@ -69,6 +69,8 @@ class Trainer(object):
 
         logging.info('LOADING CANDIDATES ENTITIES')
         self.rel2candidates = json.load(open(self.dataset + '/rel2candidates.json')) 
+        self.head2candidates = json.load(open(self.dataset + '/head2candidates.json'))
+
 
         # load answer dict
         self.e1rel_e2 = defaultdict(list)
@@ -325,6 +327,7 @@ class Trainer(object):
         assert len(test_support_tasks.keys()) == len(test_query_tasks.keys())
 
         rel2candidates = self.rel2candidates
+        head2candidates = self.head2candidates
 
         hits10 = []
         hits5 = []
@@ -356,7 +359,7 @@ class Trainer(object):
             for triple in test_query_tasks[query_]:
                 # Trick choose 100 entity as candidate
                 if self.total_candidates:
-                    candidates = total_candidates
+                    candidates = self.head2candidates[triple[0]]#total_candidates
                 else:
                     sample_cnt = 100
                     if len(total_candidates) < 100:

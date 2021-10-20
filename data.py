@@ -354,42 +354,153 @@ def convert_quate_vec(dataset):
                 else:
                     f.write(str(e) + '\t')
 
+def tail2candidate(dataset):
+    head_dict = {}
+    relations = [key for key in (json.load(open(dataset + '/train_tasks.json'))).keys() if '_inv' not in key]
+
+    with open(dataset + '/path_graph') as f:
+        for line in f:
+            line = line.rstrip()
+            e1 = line.split('\t')[0]
+            rel = line.split('\t')[1]
+            if 'inv' in rel:
+                continue
+            e2 = line.split('\t')[2]
+            if e1 in head_dict:
+                head_dict[e1] += [[e1, rel, e2]]
+            else:
+                head_dict[e1] = [[e1, rel, e2]]
+    print('end')
+    test_tasks = json.load(open(dataset + '/test_tasks_query.json'))
+
+    all_reason_head = []
+    for data in list(test_tasks.values()):
+        for triple in data:
+            all_reason_head.append(triple[0])
+    print('end')
+    head2candidates = {}
+    for idx, head in enumerate(all_reason_head):
+        candidates = []
+        if head in head_dict:
+            # 一跳
+            fil_o_data = [data[2] for data in head_dict[head]]
+            # fil_data = [data for data in head_dict[head]]
+            candidates += fil_o_data
+            # print('head', head)
+            # print('1st fil_o_data', fil_o_data)
+            # print('1st fil_data', fil_data)
+            for tail in fil_o_data:
+                if tail not in head_dict:
+                    continue
+                fil_o_data = [data[2] for data in head_dict[tail]]
+                # fil_data = [data for data in head_dict[tail]]
+                candidates += fil_o_data
+                # print('2nd fil_o_data', fil_o_data)
+                # print('2nd fil_data', fil_data)
+                for tail in fil_o_data:
+                    if tail not in head_dict:
+                        continue
+                    fil_o_data = [data[2] for data in head_dict[tail]]
+                    # fil_data = [data for data in head_dict[tail]]
+                    candidates += fil_o_data
+                    # print('3rd fil_o_data', fil_o_data)
+                    # print('3rd fil_data', fil_data)
+                    for tail in fil_o_data:
+                        if tail not in head_dict:
+                            continue
+                        fil_o_data = [data[2] for data in head_dict[tail]]
+                        # fil_data = [data for data in head_dict[tail]]
+                        candidates += fil_o_data
+                        # print('4th fil_o_data', fil_o_data)
+                        # print('4th fil_data', fil_data)
+                        for tail in fil_o_data:
+                            if tail not in head_dict:
+                                continue
+                            fil_o_data = [data[2] for data in head_dict[tail]]
+                            # fil_data = [data for data in head_dict[tail]]
+                            candidates += fil_o_data
+                            # print('5th fil_o_data', fil_o_data)
+                            # print('5th fil_data', fil_data)
+                            for tail in fil_o_data:
+                                if tail not in head_dict:
+                                    continue
+                                fil_o_data = [data[2] for data in head_dict[tail]]
+                                # fil_data = [data for data in head_dict[tail]]
+                                candidates += fil_o_data
+                                # print('6th fil_o_data', fil_o_data)
+                                # print('6th fil_data', fil_data)
+
+        head2candidates[head] = list(set(candidates))
+        print(idx, head, len(head2candidates[head])) #head2candidates[head])
+
+    json.dump(head2candidates, open(dataset + '/head2candidates.json', 'w'), ensure_ascii=False, indent=4)
+
+
+def test(dataset):
+    with open(dataset + '/head2candidates.json', 'r') as file:
+        head2candidates = json.load(file)
+    with open(dataset + '/test_tasks_query.json', 'r') as file:
+        test_tasks_query = json.load(file)
+    test_pairs = []
+    for key in test_tasks_query.keys():
+        for d in test_tasks_query[key]:
+            test_pairs.append(d)
+    print(len(test_pairs))
+
+    for pair in test_pairs:
+        head = pair[0]
+        tail = pair[2]
+        if tail not in head2candidates[head]:
+            print(pair)
+
 if __name__ == '__main__':
     start = time()
 
-    PRETRAIN_TYPE = 'QuatE_v2'
-    if PRETRAIN_TYPE == 'TransE':
-        #build ent2ids rel2ids
-        DATASET = './ARMY'
-        build_vocab(DATASET)
-        # build e1rel_e2.json
-        for_filtering(DATASET, save=True)
-        # rel2candidates.json
-        candidate_triples(DATASET)
-        # Convert Embedding
-        convert_vec(DATASET)
-        print('Time eclipse: ', time() - start)
-    elif PRETRAIN_TYPE == 'QuatE':
-        #build ent2ids rel2ids
-        DATASET = './ARMY_QuatE'
-        build_vocab(DATASET)
-        # build e1rel_e2.json
-        for_filtering(DATASET, save=True)
-        # rel2candidates.json
-        candidate_triples(DATASET)
-        # Convert Embedding
-        convert_quate_vec(DATASET)
-        print('Time eclipse: ', time() - start)
-    elif PRETRAIN_TYPE == 'QuatE_v2':
-        #build ent2ids rel2ids
-        DATASET = './ARMY_QuatE_v2'
-        build_vocab(DATASET)
-        # build e1rel_e2.json
-        for_filtering(DATASET, save=True)
-        # rel2candidates.json
-        candidate_triples(DATASET)
-        # Convert Embedding
-        convert_quate_vec(DATASET)
-        print('Time eclipse: ', time() - start)
-
+    PRETRAIN_TYPE = 'QuatE_v3'
+    # if PRETRAIN_TYPE == 'TransE':
+    #     #build ent2ids rel2ids
+    #     DATASET = './ARMY'
+    #     build_vocab(DATASET)
+    #     # build e1rel_e2.json
+    #     for_filtering(DATASET, save=True)
+    #     # rel2candidates.json
+    #     candidate_triples(DATASET)
+    #     # Convert Embedding
+    #     convert_vec(DATASET)
+    #     print('Time eclipse: ', time() - start)
+    # elif PRETRAIN_TYPE == 'QuatE':
+    #     #build ent2ids rel2ids
+    #     DATASET = './ARMY_QuatE'
+    #     build_vocab(DATASET)
+    #     # build e1rel_e2.json
+    #     for_filtering(DATASET, save=True)
+    #     # rel2candidates.json
+    #     candidate_triples(DATASET)
+    #     # Convert Embedding
+    #     convert_quate_vec(DATASET)
+    #     print('Time eclipse: ', time() - start)
+    # elif PRETRAIN_TYPE == 'QuatE_v2':
+    #     #build ent2ids rel2ids
+    #     DATASET = './ARMY_QuatE_v2'
+    #     build_vocab(DATASET)
+    #     # build e1rel_e2.json
+    #     for_filtering(DATASET, save=True)
+    #     # rel2candidates.json
+    #     candidate_triples(DATASET)
+    #     # Convert Embedding
+    #     convert_quate_vec(DATASET)
+    #     print('Time eclipse: ', time() - start)
+    # elif PRETRAIN_TYPE == 'QuatE_v3':
+    #     #build ent2ids rel2ids
+    #     DATASET = './ARMY_QuatE_v3'
+    #     build_vocab(DATASET)
+    #     # build e1rel_e2.json
+    #     for_filtering(DATASET, save=True)
+    #     # rel2candidates.json
+    #     candidate_triples(DATASET)
+    #     # Convert Embedding
+    #     convert_quate_vec(DATASET)
+    #     print('Time eclipse: ', time() - start)
+    tail2candidate('ARMY_QuatE_v2')
+    test('ARMY_QuatE_v2')
 
