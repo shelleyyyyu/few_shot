@@ -366,10 +366,10 @@ class Trainer(object):
                         sample_cnt = len(total_candidates)
                     candidates = random.sample(total_candidates, sample_cnt)
                 true = triple[2]
-                if true not in candidates:
-                    candidates = candidates[1:]
-                    candidates.append(true)
-                # print(triple, len(candidates))
+                # if true not in candidates:
+                #     candidates = candidates[1:]
+                #     candidates.append(true)
+                print(triple, len(candidates))
 
                 query_pairs = []
                 query_pairs.append([symbol2id[triple[0]], symbol2id[triple[2]]])
@@ -427,7 +427,7 @@ class Trainer(object):
 
 
             logging.critical('{} Hits10:{:.3f}, Hits5:{:.3f}, Hits1:{:.3f} MRR:{:.3f}'.format(query_, np.mean(hits10_), np.mean(hits5_), np.mean(hits1_), np.mean(mrr_)))
-            logging.info('Number of candidates: {}, number of text examples {}'.format(len(candidates), len(hits10_)))
+            logging.info('Number of text examples {}'.format(len(hits10_)))
             # print query_ + ':'
             # print 'HITS10: ', np.mean(hits10_)
             # print 'HITS5: ', np.mean(hits5_)
