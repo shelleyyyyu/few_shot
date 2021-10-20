@@ -369,7 +369,7 @@ class Trainer(object):
                 # if true not in candidates:
                 #     candidates = candidates[1:]
                 #     candidates.append(true)
-                print(triple, len(candidates))
+                # prinprintt(triple, len(candidates))
 
                 query_pairs = []
                 query_pairs.append([symbol2id[triple[0]], symbol2id[triple[2]]])
