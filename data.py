@@ -456,51 +456,57 @@ def test(dataset):
 if __name__ == '__main__':
     start = time()
 
-    PRETRAIN_TYPE = 'QuatE_v3'
-    # if PRETRAIN_TYPE == 'TransE':
-    #     #build ent2ids rel2ids
-    #     DATASET = './ARMY'
-    #     build_vocab(DATASET)
-    #     # build e1rel_e2.json
-    #     for_filtering(DATASET, save=True)
-    #     # rel2candidates.json
-    #     candidate_triples(DATASET)
-    #     # Convert Embedding
-    #     convert_vec(DATASET)
-    #     print('Time eclipse: ', time() - start)
-    # elif PRETRAIN_TYPE == 'QuatE':
-    #     #build ent2ids rel2ids
-    #     DATASET = './ARMY_QuatE'
-    #     build_vocab(DATASET)
-    #     # build e1rel_e2.json
-    #     for_filtering(DATASET, save=True)
-    #     # rel2candidates.json
-    #     candidate_triples(DATASET)
-    #     # Convert Embedding
-    #     convert_quate_vec(DATASET)
-    #     print('Time eclipse: ', time() - start)
-    # elif PRETRAIN_TYPE == 'QuatE_v2':
-    #     #build ent2ids rel2ids
-    #     DATASET = './ARMY_QuatE_v2'
-    #     build_vocab(DATASET)
-    #     # build e1rel_e2.json
-    #     for_filtering(DATASET, save=True)
-    #     # rel2candidates.json
-    #     candidate_triples(DATASET)
-    #     # Convert Embedding
-    #     convert_quate_vec(DATASET)
-    #     print('Time eclipse: ', time() - start)
-    # elif PRETRAIN_TYPE == 'QuatE_v3':
-    #     #build ent2ids rel2ids
-    #     DATASET = './ARMY_QuatE_v3'
-    #     build_vocab(DATASET)
-    #     # build e1rel_e2.json
-    #     for_filtering(DATASET, save=True)
-    #     # rel2candidates.json
-    #     candidate_triples(DATASET)
-    #     # Convert Embedding
-    #     convert_quate_vec(DATASET)
-    #     print('Time eclipse: ', time() - start)
-    tail2candidate('ARMY_QuatE_v2')
-    test('ARMY_QuatE_v2')
+    PRETRAIN_TYPE = 'TransE'
+    if PRETRAIN_TYPE == 'TransE':
+        #build ent2ids rel2ids
+        DATASET = './ARMY_TransE_v3'
+        build_vocab(DATASET)
+        # build e1rel_e2.json
+        for_filtering(DATASET, save=True)
+        # rel2candidates.json
+        candidate_triples(DATASET)
+        # Convert Embedding
+        convert_vec(DATASET)
+        print('Time eclipse: ', time() - start)
+        # tail2candidate(DATASET)
+        # test(DATASET)
+    elif PRETRAIN_TYPE == 'QuatE':
+        #build ent2ids rel2ids
+        DATASET = './ARMY_QuatE'
+        build_vocab(DATASET)
+        # build e1rel_e2.json
+        for_filtering(DATASET, save=True)
+        # rel2candidates.json
+        candidate_triples(DATASET)
+        # Convert Embedding
+        convert_quate_vec(DATASET)
+        print('Time eclipse: ', time() - start)
+        tail2candidate(DATASET)
+        test(DATASET)
+    elif PRETRAIN_TYPE == 'QuatE_v2':
+        #build ent2ids rel2ids
+        DATASET = './ARMY_QuatE_v2'
+        build_vocab(DATASET)
+        # build e1rel_e2.json
+        for_filtering(DATASET, save=True)
+        # rel2candidates.json
+        candidate_triples(DATASET)
+        # Convert Embedding
+        convert_quate_vec(DATASET)
+        print('Time eclipse: ', time() - start)
+        tail2candidate(DATASET)
+        test(DATASET)
+    elif PRETRAIN_TYPE == 'QuatE_v3':
+        #build ent2ids rel2ids
+        DATASET = './ARMY_QuatE_v3'
+        build_vocab(DATASET)
+        # build e1rel_e2.json
+        for_filtering(DATASET, save=True)
+        # rel2candidates.json
+        candidate_triples(DATASET)
+        # Convert Embedding
+        convert_quate_vec(DATASET)
+        print('Time eclipse: ', time() - start)
+        tail2candidate(DATASET)
+        test(DATASET)
 

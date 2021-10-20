@@ -359,17 +359,17 @@ class Trainer(object):
             for triple in test_query_tasks[query_]:
                 # Trick choose 100 entity as candidate
                 if self.total_candidates:
-                    candidates = self.head2candidates[triple[0]]#total_candidates
+                    candidates = total_candidates #self.head2candidates[triple[0]]#total_candidates
                 else:
                     sample_cnt = 100
                     if len(total_candidates) < 100:
                         sample_cnt = len(total_candidates)
                     candidates = random.sample(total_candidates, sample_cnt)
                 true = triple[2]
-                # if true not in candidates:
-                #     candidates = candidates[1:]
-                #     candidates.append(true)
-                # prinprintt(triple, len(candidates))
+                if true not in candidates:
+                    candidates = candidates[1:]
+                    candidates.append(true)
+                # print(triple, len(candidates))
 
                 query_pairs = []
                 query_pairs.append([symbol2id[triple[0]], symbol2id[triple[2]]])
