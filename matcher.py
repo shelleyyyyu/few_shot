@@ -52,6 +52,8 @@ class EmbedMatcher(nn.Module):
                 tmp_array = tmp_array + [self.padid]*(5-len(tmp_array))
             relations.append(tmp_array)
         relations = Variable(torch.LongTensor(np.stack(relations, axis=0)))
+        if torch.cuda.is_available():
+            relations = relations.cuda()
         rel_embeds = self.dropout(self.symbol_emb(relations)) # (batch, 200, embed_dim)
 
         entities = []
@@ -63,6 +65,8 @@ class EmbedMatcher(nn.Module):
                 tmp_array = tmp_array + [self.padid]*(5-len(tmp_array))
             entities.append(tmp_array)
         entities = Variable(torch.LongTensor(np.stack(entities, axis=0)))
+        if torch.cuda.is_available():
+            entities = entities.cuda()
         ent_embeds = self.dropout(self.symbol_emb(entities))  # (batch, 200, embed_dim)
 
         rel_embeds = self.dropout(rel_embeds) # (batch, 200, embed_dim)
