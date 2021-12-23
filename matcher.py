@@ -84,15 +84,17 @@ class EmbedMatcher(nn.Module):
         support: (few, 2)
         return: (batch_size, )
         '''
-
         support_neighbor = self.neighbor_encoder(support_pairs, len(support_pairs))
         support = support_neighbor # batch_size * 200
         support_g = self.support_encoder(support) # batch_size * 200
-        query = Variable(torch.LongTensor(np.stack(query_pairs, axis=0))).float() #batch_size
+        query = Variable(torch.LongTensor(np.stack(query_pairs, axis=0))) #batch_size
         if torch.cuda.is_available():
             query = query.cuda()
+        query_embeds = self.dropout(self.symbol_emb(query))  # (batch, 200, embed_dim)
+
         support_g = torch.mean(support_g, dim=1)
-        matching_scores = torch.matmul(query, support_g).squeeze()
+        query_g = torch.mean(query_embeds, dim=1)
+        matching_scores = torch.matmul(query_g, support_g).squeeze() * 10**10
         return matching_scores
 
 if __name__ == '__main__':

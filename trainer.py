@@ -225,7 +225,10 @@ class Trainer(object):
 
             for i in range(len(query_pairs)):
                 score = self.matcher([query_pairs[i]], [support_pairs[i]])
-                score = score.detach().numpy()
+                if torch.cuda.is_available():
+                    score = score.detach().cpu().numpy()
+                else:
+                    score = score.detach().numpy()
                 scores_list.append(score)
 
             sort_scores_list = list(np.argsort(scores_list))[::-1]
