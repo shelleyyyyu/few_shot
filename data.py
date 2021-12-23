@@ -223,6 +223,7 @@ def build_vocab(dataset):
         data = f.readlines()
         for item in list(data):
             if len(item.strip().split('\t')) != 2:
+                print(item)
                 continue
             name = item.strip().split('\t')[0]
             id = int(item.strip().split('\t')[1])
@@ -354,6 +355,29 @@ def convert_quate_vec(dataset):
                 else:
                     f.write(str(e) + '\t')
 
+def convert_transe_vec(dataset):
+    with open(dataset + '/transe.parameter.json') as f:
+        data = json.load(f)
+        # dict_keys(['zero_const', 'pi_const', 'ent_embeddings.weight', 'rel_embeddings.weight'])
+        ent_embeddings = data['ent_embeddings.weight']
+        rel_embeddings = data['rel_embeddings.weight']
+
+    with open(dataset + '/entity2vec.TransE', 'w', encoding='utf-8') as f:
+        for emb in ent_embeddings:
+            for idx, e in enumerate(list(emb)):
+                if idx == len(list(emb))-1:
+                    f.write(str(e)+'\n')
+                else:
+                    f.write(str(e)+'\t')
+
+    with open(dataset + '/relation2vec.TransE', 'w', encoding='utf-8') as f:
+        for emb in rel_embeddings:
+            for idx, e in enumerate(list(emb)):
+                if idx == len(list(emb)) - 1:
+                    f.write(str(e) + '\n')
+                else:
+                    f.write(str(e) + '\t')
+
 def tail2candidate(dataset):
     head_dict = {}
     relations = [key for key in (json.load(open(dataset + '/train_tasks.json'))).keys() if '_inv' not in key]
@@ -370,14 +394,12 @@ def tail2candidate(dataset):
                 head_dict[e1] += [[e1, rel, e2]]
             else:
                 head_dict[e1] = [[e1, rel, e2]]
-    print('end')
     test_tasks = json.load(open(dataset + '/test_tasks_query.json'))
 
     all_reason_head = []
     for data in list(test_tasks.values()):
         for triple in data:
             all_reason_head.append(triple[0])
-    print('end')
     head2candidates = {}
     for idx, head in enumerate(all_reason_head):
         candidates = []
@@ -456,7 +478,7 @@ def test(dataset):
 if __name__ == '__main__':
     start = time()
 
-    PRETRAIN_TYPE = 'TransE'
+    PRETRAIN_TYPE = 'bid_prediction_match'
     if PRETRAIN_TYPE == 'TransE':
         #build ent2ids rel2ids
         DATASET = './ARMY_TransE_v3'
@@ -509,4 +531,17 @@ if __name__ == '__main__':
         print('Time eclipse: ', time() - start)
         tail2candidate(DATASET)
         test(DATASET)
+    elif PRETRAIN_TYPE == 'bid_prediction_match':
+        #build ent2ids rel2ids
+        DATASET = './bid_prediction_match'
+        build_vocab(DATASET)
+        # # build e1rel_e2.json
+        # for_filtering(DATASET, save=True)
+        # # rel2candidates.json
+        # candidate_triples(DATASET)
+        # Convert Embedding
+        convert_transe_vec(DATASET)
+        print('Time eclipse: ', time() - start)
+        # tail2candidate(DATASET)
+        # test(DATASET)
 
