@@ -159,13 +159,6 @@ class Trainer(object):
             # Support 應該是機構以及其相關特徵
             # Query 是項目
             # False 是未中標項目
-            print('-'*20)
-            print(support_pairs)
-            print('-'*20)
-            print(false_pairs)
-            print('-'*20)
-            print(query_pairs)
-            exit()
             query_scores = self.matcher(query_pairs, support_pairs)
             false_scores = self.matcher(query_pairs, false_pairs)
             margin_ = query_scores - false_scores

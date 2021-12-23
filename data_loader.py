@@ -63,11 +63,7 @@ def train_generate(dataset, batch_size, few, symbol2id, ent2id, e1rel_e2, num_ne
         support_pairs = [[symbol2id[triple[0]], symbol2id[triple[2]]] for triple in support_triples]
         support_left = [ent2id[triple[0]] for triple in support_triples]
         support_right = [ent2id[triple[2]] for triple in support_triples]
-        print(support_triples[0])
-        print(support_pairs[0])
-        print(support_left[0])
-        print(support_right[0])
-        exit()
+
         all_test_triples = train_and_test[few:]
         if len(all_test_triples) == 0:
             continue
