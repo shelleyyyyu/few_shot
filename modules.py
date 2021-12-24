@@ -235,8 +235,8 @@ class QueryEncoder(nn.Module):
         super(QueryEncoder, self).__init__()
         self.input_dim = input_dim
         self.process_step = process_step
-        # self.batch_size = batch_size
-        self.process = nn.LSTMCell(input_dim, 2*input_dim)
+        self.process = nn.LSTMCell(input_dim, input_dim)
+        self.linear = nn.Linear(input_dim*2, input_dim)
 
         # initialize the hidden states, TODO: try to train the initial state
         # self.h0 = Variable(torch.zeros(self.batch_size, 2*input_dim)).cuda()
@@ -257,17 +257,27 @@ class QueryEncoder(nn.Module):
             return query
 
         batch_size = query.size()[0]
-        h_r = Variable(torch.zeros(batch_size, 2 * self.input_dim))
-        c = Variable(torch.zeros(batch_size, 2 * self.input_dim))
+        h_r = Variable(torch.zeros(batch_size, self.input_dim))
+        c = Variable(torch.zeros(batch_size, self.input_dim))
         if torch.cuda.is_available():
             h_r = h_r.cuda()
             c = c.cuda()
+        # print(support.size())
+        # print(query.size())
+        # print(h_r.size())
+        # print(c.size())
+        # print(self.input_dim)
+        # print('-'*20)
         for step in range(self.process_step):
+            # print(query.size())
+            # print(h_r.size())
+            # print(c.size())
+            # print('-'*20)
             h_r_, c = self.process(query, (h_r, c))
             h = query + h_r_[:,:self.input_dim] # (batch_size, query_dim)
             attn = F.softmax(torch.matmul(h, support.t()), dim=1)
             r = torch.matmul(attn, support) # (batch_size, support_dim)
-            h_r = torch.cat((h, r), dim=1)
+            h_r = self.linear(torch.cat((h, r), dim=1))
 
         # return h_r_[:, :self.input_dim]
         return h

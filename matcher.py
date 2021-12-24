@@ -35,7 +35,7 @@ class EmbedMatcher(nn.Module):
 
         d_model = self.embed_dim*2
         self.support_encoder = SupportEncoder(self.embed_dim, 2*self.embed_dim, dropout)
-        self.query_encoder = QueryEncoder(d_model, process_steps)
+        self.query_encoder = QueryEncoder(self.embed_dim, process_steps)
 
 
     def neighbor_encoder(self, connections, num_neighbors):
@@ -91,7 +91,11 @@ class EmbedMatcher(nn.Module):
         if torch.cuda.is_available():
             query = query.cuda()
         query_embeds = self.dropout(self.symbol_emb(query))  # (batch, 200, embed_dim)
-
+        # print(support_g.size())
+        # print(query_embeds.size())
+        query_embeds = self.query_encoder(support_g, query_embeds)
+        # print(query_embeds.size())
+        # exit()
         # mean_support_g = torch.mean(support_g, dim=1)
         # mean_query_g = torch.mean(query_embeds, dim=1)
         # matching_scores = torch.matmul(mean_query_g, mean_support_g).squeeze() * 10**10
