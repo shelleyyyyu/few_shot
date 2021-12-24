@@ -92,9 +92,11 @@ class EmbedMatcher(nn.Module):
             query = query.cuda()
         query_embeds = self.dropout(self.symbol_emb(query))  # (batch, 200, embed_dim)
 
-        support_g = torch.mean(support_g, dim=1)
-        query_g = torch.mean(query_embeds, dim=1)
-        matching_scores = torch.matmul(query_g, support_g).squeeze() * 10**10
+        # mean_support_g = torch.mean(support_g, dim=1)
+        # mean_query_g = torch.mean(query_embeds, dim=1)
+        # matching_scores = torch.matmul(mean_query_g, mean_support_g).squeeze() * 10**10
+        cos = nn.CosineSimilarity(dim=1, eps=1e-6)
+        matching_scores = cos(query_embeds, support_g)
         return matching_scores
 
 if __name__ == '__main__':

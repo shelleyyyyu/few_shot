@@ -163,10 +163,12 @@ class Trainer(object):
             false_scores = self.matcher(query_pairs, false_pairs)
             # print('query_scores', query_scores)
             # print('false_scores', false_scores)
-            margin_ = query_scores - false_scores
+            margin_ = (query_scores - false_scores).abs()
             # print('margin_', margin_)
             margins.append(margin_.mean().item())
             # print('margins', margins)
+            # print('self.margin - margin_', self.margin - margin_)
+            # print('F.relu(self.margin - margin_)', F.relu(self.margin - margin_))
             loss = F.relu(self.margin - margin_).mean()
             # print('loss', loss)
             # exit()
