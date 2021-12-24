@@ -177,7 +177,7 @@ class Trainer(object):
 
             self.optim.zero_grad()
             loss.backward()
-            nn.utils.clip_grad_norm(self.parameters, self.grad_clip)
+            #nn.utils.clip_grad_norm(self.parameters, self.grad_clip)
             self.optim.step()
 
             if self.batch_nums != 0 and self.batch_nums % self.eval_every == 0:

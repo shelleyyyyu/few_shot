@@ -96,11 +96,12 @@ class EmbedMatcher(nn.Module):
         query_embeds = self.query_encoder(support_g, query_embeds)
         # print(query_embeds.size())
         # exit()
-        # mean_support_g = torch.mean(support_g, dim=1)
-        # mean_query_g = torch.mean(query_embeds, dim=1)
-        # matching_scores = torch.matmul(mean_query_g, mean_support_g).squeeze() * 10**10
-        cos = nn.CosineSimilarity(dim=1, eps=1e-6)
-        matching_scores = cos(query_embeds, support_g)
+        mean_support_g = torch.mean(support_g, dim=1)
+        mean_query_g = torch.mean(query_embeds, dim=1)
+        matching_scores = torch.matmul(mean_query_g, mean_support_g).squeeze()
+        # cos = nn.CosineSimilarity(dim=1, eps=1e-6)
+        # matching_scores = cos(query_embeds, support_g)
+        # print(matching_scores)
         return matching_scores
 
 if __name__ == '__main__':
