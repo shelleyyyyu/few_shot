@@ -29,12 +29,13 @@ class Trainer(object):
             use_pretrain = True
 
         logging.info('LOADING SYMBOL ID AND SYMBOL EMBEDDING')
-        if self.random_embed:
-            self.load_symbol2id()
-            use_pretrain = False
-        else:
-            # load pretrained embedding
-            self.load_embed()
+        if self.train():
+            if self.random_embed:
+                self.load_symbol2id()
+                use_pretrain = False
+            else:
+                # load pretrained embedding
+                self.load_embed()
         self.use_pretrain = use_pretrain
         self.num_symbols = len(self.symbol2id.keys()) - 1 # one for 'PAD'
         self.pad_id = self.num_symbols
