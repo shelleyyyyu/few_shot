@@ -164,7 +164,7 @@ class Trainer(object):
             print('query_scores', query_scores)
             print('false_scores', false_scores)
             print('margin_', query_scores - false_scores)
-            margin_ = (query_scores - false_scores).abs()
+            margin_ = (query_scores - false_scores)
             # print('margin_', margin_)
             margins.append(margin_.mean().item())
             # print('margins', margins)
