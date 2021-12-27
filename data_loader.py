@@ -132,7 +132,7 @@ def train_generate_(dataset, batch_size, few, symbol2id, ent2id, e1rel_e2, num_n
 
         labels = [1] * len(query_triples)
 
-        # sample negtive samples for every true triples
+        # sample negative samples for every true triples
         for triple in query_triples:
             e_h = triple[0]
             e_t = triple[2]
@@ -179,11 +179,7 @@ def train_generate_matcher(dataset, batch_size, symbol2id):
                     positive_company_dict[project] = [details]
                 else:
                     positive_company_dict[project] += [details]
-    # print(negative_company)
-    # print(negative_company_dict)
-    # print(positive_company)
-    # print(positive_company_dict)
-    # exit()
+
     # Task 屬於每一個招標項目以及投標公司相關特徵
     task_pool = list(positive_company_dict.keys())
     num_tasks = len(task_pool)
