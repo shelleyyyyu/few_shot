@@ -161,9 +161,9 @@ class Trainer(object):
             # False 是未中標項目
             query_scores = self.matcher(query_pairs, support_pairs)
             false_scores = self.matcher(query_pairs, false_pairs)
-            print('query_scores', query_scores)
-            print('false_scores', false_scores)
-            print('margin_', query_scores - false_scores)
+            # print('query_scores', query_scores)
+            # print('false_scores', false_scores)
+            # print('margin_', query_scores - false_scores)
             margin_ = (query_scores - false_scores)
             # print('margin_', margin_)
             margins.append(margin_.mean().item())
