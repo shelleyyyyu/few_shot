@@ -100,7 +100,7 @@ class EmbedMatcher(nn.Module):
         # mean_query_g = torch.mean(query_embeds, dim=1)
         # matching_scores = torch.matmul(mean_query_g, mean_support_g).squeeze()
         cos = nn.CosineSimilarity(dim=1, eps=1e-6)
-        matching_scores = cos(query_embeds, support_g)
+        matching_scores = cos(query_embeds, support_g).squeeze()
         # print(matching_scores)
         return matching_scores
 
