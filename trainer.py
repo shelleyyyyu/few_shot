@@ -258,7 +258,7 @@ class Trainer(object):
     def test_(self):
         self.load()
         logging.info('Pre-trained model loaded')
-        self.eval(mode='test', meta=self.meta)
+        self.eval(mode='test')
 
 if __name__ == '__main__':
     args = read_options()
