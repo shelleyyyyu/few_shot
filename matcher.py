@@ -67,10 +67,10 @@ class EmbedMatcher(nn.Module):
         entities = Variable(torch.LongTensor(np.stack(entities, axis=0)))
         if torch.cuda.is_available():
             entities = entities.cuda()
-        ent_embeds = self.dropout(self.symbol_emb(entities))  # (batch, 200, embed_dim)
 
-        rel_embeds = self.dropout(rel_embeds) # (batch, 200, embed_dim)
-        #ent_embeds = self.dropout(ent_embeds) # (batch, 200, embed_dim)
+        ent_embeds = self.dropout(self.symbol_emb(entities))  # (batch, 200, embed_dim)
+        # rel_embeds = self.dropout(rel_embeds) # (batch, 200, embed_dim)
+        # ent_embeds = self.dropout(ent_embeds) # (batch, 200, embed_dim)
         concat_embeds = torch.cat((rel_embeds, ent_embeds), dim=-1) # (batch, 200, 2*embed_dim)
         out = self.gcn_w(concat_embeds) # (batch, embed_dim)
         out = torch.sum(out, dim=1) # (batch, embed_dim)
