@@ -29,7 +29,7 @@ class Trainer(object):
             use_pretrain = True
 
         logging.info('LOADING SYMBOL ID AND SYMBOL EMBEDDING')
-        if self.test or self.random_embed:
+        if self.random_embed:
             self.load_symbol2id()
             use_pretrain = False
         else:
@@ -252,7 +252,7 @@ class Trainer(object):
         logging.critical('Top Prediction Accuracy: {}'.format('%.4f'%(accuracy)))
         logging.info('Number of text examples {}'.format(len(list(test_tasks.keys()))))
 
-        self.matcher.train()
+        # self.matcher.train()
         return accuracy, result
 
     def test_(self):
