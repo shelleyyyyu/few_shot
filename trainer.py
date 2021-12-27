@@ -29,13 +29,12 @@ class Trainer(object):
             use_pretrain = True
 
         logging.info('LOADING SYMBOL ID AND SYMBOL EMBEDDING')
-        if self.train():
-            if self.random_embed:
-                self.load_symbol2id()
-                use_pretrain = False
-            else:
-                # load pretrained embedding
-                self.load_embed()
+        if self.test or self.random_embed:
+            self.load_symbol2id()
+            use_pretrain = False
+        else:
+            # load pretrained embedding
+            self.load_embed()
         self.use_pretrain = use_pretrain
         self.num_symbols = len(self.symbol2id.keys()) - 1 # one for 'PAD'
         self.pad_id = self.num_symbols
@@ -57,7 +56,6 @@ class Trainer(object):
         self.ent2id = json.load(open(self.dataset + '/ent2ids'))
         self.rel2id = json.load(open(self.dataset + '/relation2ids'))
         self.num_ents = len(self.ent2id.keys())
-
         # logging.info('BUILDING CONNECTION MATRIX')
         # degrees = self.build_connection(max_=self.max_neighbor)
 
