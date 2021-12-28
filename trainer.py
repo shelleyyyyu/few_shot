@@ -259,9 +259,6 @@ class Trainer(object):
         # self.matcher.train()
         return accuracy, result
 
-    def test(self):
-        self.load()
-        self.eval(mode='test')
 
 if __name__ == '__main__':
     args = read_options()
@@ -288,6 +285,7 @@ if __name__ == '__main__':
 
     trainer = Trainer(args)
     if args.test:
-        trainer.test()
+        trainer.load()
+        trainer.eval(mode='test')
     else:
         trainer.train()
