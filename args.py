@@ -27,6 +27,7 @@ def read_options():
     parser.add_argument("--prefix", default='intial', type=str)
     parser.add_argument("--seed", default='19942', type=int)
     parser.add_argument("--total_candidates", action='store_true')
+    parser.add_argument("--ckpt_file", default='./models/initial')
 
     args = parser.parse_args()
     # args.embed_path = args.dataset + '/symbol2vec.vec'

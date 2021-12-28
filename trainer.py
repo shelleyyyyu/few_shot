@@ -143,7 +143,7 @@ class Trainer(object):
         torch.save(self.matcher.state_dict(), path)
 
     def load(self):
-        self.matcher.load_state_dict(torch.load(self.save_path, map_location=lambda  storage, loc: storage))
+        self.matcher.load_state_dict(torch.load(self.ckpt_file))#, map_location=lambda  storage, loc: storage))
 
     def train(self):
         logging.info('START TRAINING...')
