@@ -35,10 +35,13 @@ class Trainer(object):
         else:
             # load pretrained embedding
             self.load_embed()
+
+        if self.test:
+            use_pretrain = False
+
         self.use_pretrain = use_pretrain
         self.num_symbols = len(self.symbol2id.keys()) - 1 # one for 'PAD'
         self.pad_id = self.num_symbols
-        print(self.symbol2vec[0])
         self.matcher = EmbedMatcher(self.embed_dim, self.num_symbols, use_pretrain=self.use_pretrain, embed=self.symbol2vec, dropout=self.dropout, batch_size=self.batch_size, process_steps=self.process_steps, finetune=self.fine_tune, aggregate=self.aggregate, padid=self.pad_id)
         if torch.cuda.is_available():
             self.matcher.cuda()
@@ -256,11 +259,8 @@ class Trainer(object):
         # self.matcher.train()
         return accuracy, result
 
-    def test_(self):
-        print(self.matcher.symbol_emb.weight[0])
+    def test(self):
         self.load()
-        print(self.matcher.symbol_emb.weight[0])
-        logging.info('Pre-trained model loaded')
         self.eval(mode='test')
 
 if __name__ == '__main__':
@@ -288,6 +288,6 @@ if __name__ == '__main__':
 
     trainer = Trainer(args)
     if args.test:
-        trainer.test_()
+        trainer.test()
     else:
         trainer.train()

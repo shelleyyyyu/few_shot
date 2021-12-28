@@ -25,13 +25,13 @@ class EmbedMatcher(nn.Module):
 
         init.xavier_normal_(self.gcn_w.weight)
         init.constant_(self.gcn_b, 0)
-
-        # if use_pretrain:
-        #     logging.info('LOADING KB EMBEDDINGS')
-        #     self.symbol_emb.weight.data.copy_(torch.from_numpy(embed))
-        #     if not finetune:
-        #         logging.info('FIX KB EMBEDDING')
-        #         self.symbol_emb.weight.requires_grad = False
+        print('use_pretrain', use_pretrain)
+        if use_pretrain:
+            logging.info('LOADING KB EMBEDDINGS')
+            self.symbol_emb.weight.data.copy_(torch.from_numpy(embed))
+            if not finetune:
+                logging.info('FIX KB EMBEDDING')
+                self.symbol_emb.weight.requires_grad = False
 
         self.support_encoder = SupportEncoder(self.embed_dim, 2*self.embed_dim, dropout)
         self.query_encoder = QueryEncoder(self.embed_dim, process_steps)
