@@ -11,7 +11,7 @@ class EmbedMatcher(nn.Module):
     """
     Matching metric based on KB Embeddings
     """
-    def __init__(self, embed_dim, num_symbols, use_pretrain=True, embed=None, dropout=0.2, batch_size=64, process_steps=4, finetune=False, aggregate='max', padid='-1'):
+    def __init__(self, embed_dim, num_symbols, use_pretrain=True, embed=None, dropout=0.2, process_steps=4, finetune=False, aggregate='max', padid='-1'):
         super(EmbedMatcher, self).__init__()
         self.embed_dim = embed_dim
         self.pad_idx = num_symbols
@@ -26,12 +26,12 @@ class EmbedMatcher(nn.Module):
         init.xavier_normal_(self.gcn_w.weight)
         init.constant_(self.gcn_b, 0)
 
-        if use_pretrain:
-            logging.info('LOADING KB EMBEDDINGS')
-            self.symbol_emb.weight.data.copy_(torch.from_numpy(embed))
-            if not finetune:
-                logging.info('FIX KB EMBEDDING')
-                self.symbol_emb.weight.requires_grad = False
+        # if use_pretrain:
+        #     logging.info('LOADING KB EMBEDDINGS')
+        #     self.symbol_emb.weight.data.copy_(torch.from_numpy(embed))
+        #     if not finetune:
+        #         logging.info('FIX KB EMBEDDING')
+        #         self.symbol_emb.weight.requires_grad = False
 
         d_model = self.embed_dim*2
         self.support_encoder = SupportEncoder(self.embed_dim, 2*self.embed_dim, dropout)
