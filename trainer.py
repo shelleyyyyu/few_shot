@@ -29,7 +29,7 @@ class Trainer(object):
             use_pretrain = True
 
         logging.info('LOADING SYMBOL ID AND SYMBOL EMBEDDING')
-        if self.test or self.random_embed:
+        if self.random_embed:
             self.load_symbol2id()
             use_pretrain = False
         else:

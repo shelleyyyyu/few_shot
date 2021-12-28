@@ -91,10 +91,7 @@ def train_generate(dataset, batch_size, few, symbol2id, ent2id, e1rel_e2, num_ne
             false_pairs.append([symbol2id[e_h], symbol2id[noise]])
             false_left.append(ent2id[e_h])
             false_right.append(ent2id[noise])
-        # print(len(support_pairs)) #1
-        # print(len(query_pairs)) #10
-        # print(len(false_pairs)) #10
-        # exit()
+
         yield support_pairs, query_pairs, false_pairs, support_left, support_right, query_left, query_right, false_left, false_right
 
 def train_generate_(dataset, batch_size, few, symbol2id, ent2id, e1rel_e2, num_neg=1):
