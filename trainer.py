@@ -255,7 +255,9 @@ class Trainer(object):
         return accuracy, result
 
     def test_(self):
+        print(self.matcher.symbol_emb.weight[0])
         self.load()
+        print(self.matcher.symbol_emb.weight[0])
         logging.info('Pre-trained model loaded')
         self.eval(mode='test')
 
