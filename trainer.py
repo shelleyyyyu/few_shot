@@ -143,7 +143,7 @@ class Trainer(object):
         torch.save(self.matcher.state_dict(), path)
 
     def load(self):
-        self.matcher.load_state_dict(torch.load(self.save_path))
+        self.matcher.load_state_dict(torch.load(self.save_path, map_location=lambda  storage, loc: storage))
 
     def train(self):
         logging.info('START TRAINING...')
@@ -187,6 +187,7 @@ class Trainer(object):
 
                 if accuracy > best_accuracy:
                     self.save(self.save_path + '_bestAccuracy')
+                    logging.info('New Best Accuracy: %.4f; Previous Best Accuracy: %.4f' % (float(accuracy), float(best_accuracy)))
                     best_accuracy = accuracy
 
             if self.batch_nums % self.log_every == 0:
@@ -248,7 +249,7 @@ class Trainer(object):
             result[query_] = tmp_dict
 
         accuracy = float(total_correct_count/len(list(test_tasks.keys())))
-        logging.critical('Top Prediction Accuracy: {}'.format('%.4f'%(accuracy)))
+        logging.critical('Prediction Accuracy: {}'.format('%.4f'%(accuracy)))
         logging.info('Number of text examples {}'.format(len(list(test_tasks.keys()))))
 
         # self.matcher.train()
