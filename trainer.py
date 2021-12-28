@@ -38,6 +38,7 @@ class Trainer(object):
         self.use_pretrain = use_pretrain
         self.num_symbols = len(self.symbol2id.keys()) - 1 # one for 'PAD'
         self.pad_id = self.num_symbols
+        print(self.symbol2vec[0])
         self.matcher = EmbedMatcher(self.embed_dim, self.num_symbols, use_pretrain=self.use_pretrain, embed=self.symbol2vec, dropout=self.dropout, batch_size=self.batch_size, process_steps=self.process_steps, finetune=self.fine_tune, aggregate=self.aggregate, padid=self.pad_id)
         if torch.cuda.is_available():
             self.matcher.cuda()
