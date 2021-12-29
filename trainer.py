@@ -288,6 +288,6 @@ if __name__ == '__main__':
         trainer.load()
         accuracy, result = trainer.eval(mode='test')
         print(accuracy)
-        print(result)
+        print(result[list(result.keys())[0]])
     else:
         trainer.train()
