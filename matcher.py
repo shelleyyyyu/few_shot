@@ -25,7 +25,6 @@ class EmbedMatcher(nn.Module):
 
         init.xavier_normal_(self.gcn_w.weight)
         init.constant_(self.gcn_b, 0)
-        print('use_pretrain', use_pretrain)
         if use_pretrain:
             logging.info('LOADING KB EMBEDDINGS')
             self.symbol_emb.weight.data.copy_(torch.from_numpy(embed))

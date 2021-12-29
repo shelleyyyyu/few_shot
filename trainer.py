@@ -256,7 +256,7 @@ class Trainer(object):
         logging.critical('Prediction Accuracy: {}'.format('%.4f'%(accuracy)))
         logging.info('Number of text examples {}'.format(len(list(test_tasks.keys()))))
 
-        # self.matcher.train()
+
         return accuracy, result
 
 
@@ -286,6 +286,8 @@ if __name__ == '__main__':
     trainer = Trainer(args)
     if args.test:
         trainer.load()
-        trainer.eval(mode='test')
+        accuracy, result = trainer.eval(mode='test')
+        print(accuracy)
+        print(result)
     else:
         trainer.train()
