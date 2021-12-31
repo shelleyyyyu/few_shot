@@ -227,8 +227,8 @@ class Trainer(object):
 
             for company, feature in all_test_triples.items():
                 support_pair = [[symbol2id[relation], symbol2id[tail_entity]] for relation, tail_entity in feature.items() if relation != '投标_项目_公司_是否_中标' and relation != '投标_项目_公司_本次_评标_排名']
-                support_pair.append([symbol2id['投标_公司'], symbol2id[company]])
-                support_pair.append([symbol2id['投标_项目'], symbol2id[query_]])
+                # support_pair.append([symbol2id['投标_公司'], symbol2id[company]])
+                # support_pair.append([symbol2id['投标_项目'], symbol2id[query_]])
                 support_pairs.append(support_pair)
                 ground_truth_list.append([feature['投标_项目_公司_是否_中标'], feature['投标_项目_公司_本次_评标_排名']])
 
