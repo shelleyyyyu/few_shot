@@ -90,6 +90,7 @@ class Trainer(object):
 
         symbol_id['PAD'] = i
         self.symbol2id = symbol_id
+        self.id2symbol = {symbol_id[k]:k for k in symbol_id}
         self.symbol2vec = None
 
     def load_embed(self):
@@ -139,6 +140,7 @@ class Trainer(object):
             assert embeddings.shape[0] == len(symbol_id.keys())
 
             self.symbol2id = symbol_id
+            self.id2symbol = {symbol_id[k]: k for k in symbol_id}
             self.symbol2vec = embeddings
 
     def save(self, path=None):
@@ -147,7 +149,7 @@ class Trainer(object):
         torch.save(self.matcher.state_dict(), path)
 
     def load(self):
-        self.matcher.load_state_dict(torch.load(self.ckpt_file))#, map_location=lambda  storage, loc: storage))
+        self.matcher.load_state_dict(torch.load(self.ckpt_file, map_location=lambda  storage, loc: storage))
 
     def train(self):
         logging.info('START TRAINING...')
@@ -231,7 +233,7 @@ class Trainer(object):
                 ground_truth_list.append([feature['投标_项目_公司_是否_中标'], feature['投标_项目_公司_本次_评标_排名']])
 
             for i in range(len(query_pairs)):
-                score = self.matcher([query_pairs[i]], [support_pairs[i]])
+                score = self.matcher([symbol2id[query_]], [support_pairs[i]])
                 if torch.cuda.is_available():
                     score = score.detach().cpu().numpy()
                 else:
@@ -248,8 +250,13 @@ class Trainer(object):
                 total_correct_count += 1
 
             tmp_dict = {}
-            tmp_dict['prediction'] = scores_list
-            tmp_dict['ground_truth'] = ground_truth_list
+            tmp_dict['bid_project'] = query_
+            #tmp_dict['predict_company_info'] = [[self.id2symbol[pair[0]], self.id2symbol[pair[1]]] for pair in support_pairs[sort_scores_list[0]]]
+            #tmp_dict['truth_company_info'] = [[self.id2symbol[pair[0]], self.id2symbol[pair[1]]] for pair in support_pairs[sort_scores_list[bid_sucess_id]]]
+            tmp_dict['full_bid_company_info'] = [list(list([str(self.id2symbol[pair[0]]), str(self.id2symbol[pair[1]])] for pair in support_pair) for support_pair in support_pairs )]
+            tmp_dict['prediction_score'] = ['%.3f'%float(score) for score in scores_list]
+            tmp_dict['prediction_rank'] = [int(score) for score in sort_scores_list]
+            tmp_dict['ground_truth'] = ground_truth_list#[truth[1] for truth in ground_truth_list]
             result[query_] = tmp_dict
 
         accuracy = float(total_correct_count/len(list(test_tasks.keys())))
@@ -288,6 +295,7 @@ if __name__ == '__main__':
         trainer.load()
         accuracy, result = trainer.eval(mode='test')
         print(accuracy)
-        print(result[list(result.keys())[0]])
+        with open('result.json', 'w', encoding='utf-8') as file:
+            json.dump(result, file, ensure_ascii=False, indent=4)
     else:
         trainer.train()

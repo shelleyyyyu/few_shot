@@ -161,16 +161,16 @@ def train_generate_matcher(dataset, batch_size, symbol2id):
     for project, company_details in train_tasks.items():
         for company, details in company_details.items():
             if details['投标_项目_公司_是否_中标'] == 'false':
-                details['投标_公司'] = company
-                details['投标_项目'] = project
+                # details['投标_公司'] = company
+                # details['投标_项目'] = project
                 negative_company.append(details)
                 if project not in negative_company_dict:
                     negative_company_dict[project] = [details]
                 else:
                     negative_company_dict[project] += [details]
             else:
-                details['投标_公司'] = company
-                details['投标_项目'] = project
+                # details['投标_公司'] = company
+                # details['投标_项目'] = project
                 positive_company.append(details)
                 if project not in positive_company:
                     positive_company_dict[project] = [details]

@@ -478,7 +478,7 @@ def test(dataset):
 if __name__ == '__main__':
     start = time()
 
-    PRETRAIN_TYPE = 'bid_prediction_match'
+    PRETRAIN_TYPE = 'bid_v1'
     if PRETRAIN_TYPE == 'TransE':
         #build ent2ids rel2ids
         DATASET = './ARMY_TransE_v3'
@@ -532,16 +532,14 @@ if __name__ == '__main__':
         tail2candidate(DATASET)
         test(DATASET)
     elif PRETRAIN_TYPE == 'bid_prediction_match':
-        #build ent2ids rel2ids
         DATASET = './bid_prediction_match'
         build_vocab(DATASET)
-        # # build e1rel_e2.json
-        # for_filtering(DATASET, save=True)
-        # # rel2candidates.json
-        # candidate_triples(DATASET)
-        # Convert Embedding
         convert_transe_vec(DATASET)
         print('Time eclipse: ', time() - start)
-        # tail2candidate(DATASET)
-        # test(DATASET)
+    elif PRETRAIN_TYPE == 'bid_v1':
+        DATASET = './bid_v1'
+        build_vocab(DATASET)
+        convert_transe_vec(DATASET)
+        print('Time eclipse: ', time() - start)
+
 
