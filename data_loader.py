@@ -2,6 +2,8 @@ import json
 import random
 from tqdm import tqdm
 import logging
+from modules import *
+from torch.autograd import Variable
 
 def train_generate_simple(dataset, batch_size, few, symbol2id):
     logging.info('LOADING TRAINING DATA')
@@ -149,7 +151,7 @@ def train_generate_(dataset, batch_size, few, symbol2id, ent2id, e1rel_e2, num_n
 
         yield support_pairs, query_pairs, support_left, support_right, query_left, query_right, labels
 
-def train_generate_matcher(dataset, batch_size, symbol2id):
+def train_generate_matcher(dataset, batch_size, symbol2id, padid):
     logging.info('LOADING TRAINING DATA')
     train_tasks = json.load(open(dataset + '/train_tasks.json'))
     # logging.info('LOADING CANDIDATES')
@@ -181,9 +183,9 @@ def train_generate_matcher(dataset, batch_size, symbol2id):
     task_pool = list(positive_company_dict.keys())
     num_tasks = len(task_pool)
     rel_idx = 0
-    support_pairs, false_pairs, query_pairs = [], [], []
     while True:
         # 每次走完全部task shuffle training data 一遍
+        support_pairs, false_pairs, query_pairs = [], [], []
         while len(support_pairs) < batch_size:#for i in range(batch_size):
             if rel_idx % num_tasks == 0:
                 random.shuffle(task_pool)
@@ -200,7 +202,63 @@ def train_generate_matcher(dataset, batch_size, symbol2id):
                 false_pairs.append(false_pair)
             else:
                 continue
-        yield support_pairs, query_pairs, false_pairs
+
+        query_pairs = Variable(torch.LongTensor(np.stack(query_pairs, axis=0)))
+
+        support_relations = []
+        for connection in support_pairs:
+            tmp_array = []
+            for c in connection:
+                tmp_array.append(c[0])
+            if len(tmp_array) < 5:
+                tmp_array = tmp_array + [padid] * (5 - len(tmp_array))
+            support_relations.append(tmp_array)
+        support_relations = Variable(torch.LongTensor(np.stack(support_relations, axis=0)))
+        if torch.cuda.is_available():
+            support_relations = support_relations.cuda()
+
+        support_entities = []
+        for connection in support_pairs:
+            tmp_array = []
+            for c in connection:
+                tmp_array.append(c[1])
+            if len(tmp_array) < 5:
+                tmp_array = tmp_array + [padid] * (5 - len(tmp_array))
+            support_entities.append(tmp_array)
+
+        support_entities = Variable(torch.LongTensor(np.stack(support_entities, axis=0)))
+        if torch.cuda.is_available():
+            support_entities = support_entities.cuda()
+
+        false_relations = []
+        for connection in false_pairs:
+            tmp_array = []
+            for c in connection:
+                tmp_array.append(c[0])
+            if len(tmp_array) < 5:
+                tmp_array = tmp_array + [padid] * (5 - len(tmp_array))
+            false_relations.append(tmp_array)
+        false_relations = Variable(torch.LongTensor(np.stack(false_relations, axis=0)))
+        if torch.cuda.is_available():
+            false_relations = false_relations.cuda()
+
+        false_entities = []
+        for connection in false_pairs:
+            tmp_array = []
+            for c in connection:
+                tmp_array.append(c[1])
+            if len(tmp_array) < 5:
+                tmp_array = tmp_array + [padid] * (5 - len(tmp_array))
+            false_entities.append(tmp_array)
+
+        false_entities = Variable(torch.LongTensor(np.stack(false_entities, axis=0)))
+        if torch.cuda.is_available():
+            false_entities = false_entities.cuda()
+        # print(support_relations)
+        # print(support_entities)
+        # print(query_pairs)
+        # exit()
+        yield support_relations, support_entities, query_pairs, false_relations, false_entities
 
 
 

@@ -35,37 +35,43 @@ class EmbedMatcher(nn.Module):
         self.support_encoder = SupportEncoder(self.embed_dim, 2*self.embed_dim, dropout)
         self.query_encoder = QueryEncoder(self.embed_dim, process_steps)
 
+    def cosine_similarity_onnx_exportable(self, x1, x2, dim=-1):
+        cross = (x1 * x2).sum(dim=dim)
+        x1_l2 = (x1 * x1).sum(dim=dim)
+        x2_l2 = (x2 * x2).sum(dim=dim)
+        return torch.div(cross, (x1_l2 * x2_l2).sqrt())
 
-    def neighbor_encoder(self, connections, num_neighbors):
+    def neighbor_encoder(self, relations, entities, num_neighbors):
         '''
         connections: (batch, 200, 2)
         num_neighbors: (batch,)
         '''
-        relations = []
-        for connection in connections:
-            tmp_array = []
-            for c in connection:
-                tmp_array.append(c[0])
-            if len(tmp_array) < 5:
-                tmp_array = tmp_array + [self.padid]*(5-len(tmp_array))
-            relations.append(tmp_array)
-        relations = Variable(torch.LongTensor(np.stack(relations, axis=0)))
-        if torch.cuda.is_available():
-            relations = relations.cuda()
+        # relations = []
+        # for connection in connections:
+        #     tmp_array = []
+        #     for c in connection:
+        #         tmp_array.append(c[0])
+        #     if len(tmp_array) < 5:
+        #         tmp_array = tmp_array + [self.padid] * (5 - len(tmp_array))
+        #     relations.append(tmp_array)
+        # relations = Variable(torch.LongTensor(np.stack(relations, axis=0)))
+        # if torch.cuda.is_available():
+        #     relations = relations.cuda()
+        #
+        # entities = []
+        # for connection in connections:
+        #     tmp_array = []
+        #     for c in connection:
+        #         tmp_array.append(c[1])
+        #     if len(tmp_array) < 5:
+        #         tmp_array = tmp_array + [self.padid] * (5 - len(tmp_array))
+        #     entities.append(tmp_array)
+        #
+        # entities = Variable(torch.LongTensor(np.stack(entities, axis=0)))
+        # if torch.cuda.is_available():
+        #     entities = entities.cuda()
+
         rel_embeds = self.dropout(self.symbol_emb(relations)) # (batch, 200, embed_dim)
-
-        entities = []
-        for connection in connections:
-            tmp_array = []
-            for c in connection:
-                tmp_array.append(c[1])
-            if len(tmp_array) < 5:
-                tmp_array = tmp_array + [self.padid]*(5-len(tmp_array))
-            entities.append(tmp_array)
-        entities = Variable(torch.LongTensor(np.stack(entities, axis=0)))
-        if torch.cuda.is_available():
-            entities = entities.cuda()
-
         ent_embeds = self.dropout(self.symbol_emb(entities))  # (batch, 200, embed_dim)
         rel_embeds = self.dropout(rel_embeds) # (batch, 200, embed_dim)
         ent_embeds = self.dropout(ent_embeds) # (batch, 200, embed_dim)
@@ -76,16 +82,22 @@ class EmbedMatcher(nn.Module):
         return out.tanh()
 
     #def forward(self, query, support, query_meta=None, support_meta=None):
-    def forward(self, query_pairs, support_pairs):
+    def forward(self, data):
         '''
         query: (batch_size, 2)
         support: (few, 2)
         return: (batch_size, )
         '''
-        support_neighbor = self.neighbor_encoder(support_pairs, len(support_pairs))
+        query_pairs = data['query_pairs']
+        entities = data['support_pairs_entities']
+        relations = data['support_pairs_relations']
+        # print(type(data['query_pairs']))
+        # print(type(data))
+        # exit()
+        support_neighbor = self.neighbor_encoder(relations, entities, relations.size()[0])#len(support_pairs))
         support = support_neighbor # batch_size * 200
         support_g = self.support_encoder(support) # batch_size * 200
-        query = Variable(torch.LongTensor(np.stack(query_pairs, axis=0))) #batch_size
+        query = query_pairs#Variable(torch.LongTensor(np.stack(query_pairs, axis=0))) #batch_size
         if torch.cuda.is_available():
             query = query.cuda()
         query_embeds = self.dropout(self.symbol_emb(query))  # (batch, 200, embed_dim)
@@ -98,8 +110,10 @@ class EmbedMatcher(nn.Module):
         # mean_query_g = torch.mean(query_embeds, dim=1)
         # matching_scores = torch.matmul(mean_query_g, mean_support_g).squeeze()
         cos = nn.CosineSimilarity(dim=1, eps=1e-6)
-        matching_scores = cos(query_embeds, support_g).squeeze()
-        # print(matching_scores)
+        #matching_scores = torch.matmul(mean_query_g, mean_support_g).squeeze()
+        # matching_scores = cos(query_embeds, support_g).squeeze()
+        matching_scores = self.cosine_similarity_onnx_exportable(query_embeds, support_g, dim=1).squeeze()
+
         return matching_scores
 
 if __name__ == '__main__':

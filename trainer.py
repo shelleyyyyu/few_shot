@@ -14,6 +14,10 @@ from args import read_options
 from data_loader import *
 from matcher import *
 from tensorboardX import SummaryWriter
+import torch.onnx
+from onnx_tf.backend import prepare
+import numpy as np
+import onnx
 
 class Trainer(object):
     
@@ -149,7 +153,8 @@ class Trainer(object):
         torch.save(self.matcher.state_dict(), path)
 
     def load(self):
-        self.matcher.load_state_dict(torch.load(self.ckpt_file, map_location=lambda  storage, loc: storage))
+        checkpoint = torch.load(self.ckpt_file, map_location=lambda storage, loc: storage)
+        self.matcher.load_state_dict(checkpoint)
 
     def train(self):
         logging.info('START TRAINING...')
@@ -159,13 +164,23 @@ class Trainer(object):
         losses = deque([], self.log_every)
         margins = deque([], self.log_every)
 
-        for data in train_generate_matcher(self.dataset, self.batch_size, self.symbol2id):
-            support_pairs, query_pairs, false_pairs = data
+        for data in train_generate_matcher(self.dataset, self.batch_size, self.symbol2id, self.pad_id):
+            #support_pairs, query_pairs, false_pairs = data
+            support_relations, support_entities, query_pairs, false_relations, false_entities = data
+
             # Support 應該是機構以及其相關特徵
             # Query 是項目
             # False 是未中標項目
-            query_scores = self.matcher(query_pairs, support_pairs)
-            false_scores = self.matcher(query_pairs, false_pairs)
+            data = {}
+            data['query_pairs'] = query_pairs
+            data['support_pairs_entities'] = support_entities
+            data['support_pairs_relations'] = support_relations
+            query_scores = self.matcher(data)
+            data = {}
+            data['query_pairs'] = query_pairs
+            data['support_pairs_entities'] = false_entities
+            data['support_pairs_relations'] = false_relations
+            false_scores = self.matcher(data)
             # print('query_scores', query_scores)
             # print('false_scores', false_scores)
             # print('margin_', query_scores - false_scores)
@@ -219,7 +234,7 @@ class Trainer(object):
         for query_ in test_tasks.keys():
 
             all_test_triples = test_tasks[query_]
-            query_pairs = [symbol2id[query_]]*len(all_test_triples)
+            # query_pairs = [symbol2id[query_]]*len(all_test_triples)
 
             support_pairs = []
             ground_truth_list = []
@@ -232,8 +247,44 @@ class Trainer(object):
                 support_pairs.append(support_pair)
                 ground_truth_list.append([feature['投标_项目_公司_是否_中标'], feature['投标_项目_公司_本次_评标_排名']])
 
-            for i in range(len(query_pairs)):
-                score = self.matcher([symbol2id[query_]], [support_pairs[i]])
+            for i in range(len(all_test_triples)):
+                query_pairs = [symbol2id[query_]]
+                support_list = [support_pairs[i]]
+
+                query_pairs = Variable(torch.LongTensor(np.stack(query_pairs, axis=0)))
+
+                support_relations = []
+                for connection in support_list:
+                    tmp_array = []
+                    for c in connection:
+                        tmp_array.append(c[0])
+                    if len(tmp_array) < 5:
+                        tmp_array = tmp_array + [self.pad_id] * (5 - len(tmp_array))
+                    support_relations.append(tmp_array)
+                support_relations = Variable(torch.LongTensor(np.stack(support_relations, axis=0)))
+                if torch.cuda.is_available():
+                    support_relations = support_relations.cuda()
+
+                support_entities = []
+                for connection in support_list:
+                    tmp_array = []
+                    for c in connection:
+                        tmp_array.append(c[1])
+                    if len(tmp_array) < 5:
+                        tmp_array = tmp_array + [self.pad_id] * (5 - len(tmp_array))
+                    support_entities.append(tmp_array)
+
+                support_entities = Variable(torch.LongTensor(np.stack(support_entities, axis=0)))
+                if torch.cuda.is_available():
+                    support_entities = support_entities.cuda()
+
+
+                data = {}
+                data['query_pairs'] = query_pairs
+                data['support_pairs_entities'] = support_entities
+                data['support_pairs_relations'] = support_relations
+
+                score = self.matcher(data)
                 if torch.cuda.is_available():
                     score = score.detach().cpu().numpy()
                 else:
@@ -294,8 +345,14 @@ if __name__ == '__main__':
     if args.test:
         trainer.load()
         accuracy, result = trainer.eval(mode='test')
-        print(accuracy)
-        with open('result.json', 'w', encoding='utf-8') as file:
-            json.dump(result, file, ensure_ascii=False, indent=4)
+        data = {}
+        data['query_pairs'] = torch.from_numpy(np.array([17063]))
+        data['support_pairs_entities'] = torch.from_numpy(np.array([[340962]]))
+        data['support_pairs_relations'] = torch.from_numpy(np.array([[15]]))
+        print(data)
+        torch.onnx.export(trainer.matcher, data, "bid.onnx")
+        onnx_model = onnx.load("bid.onnx")  # load onnx model
+        tf_exp = prepare(onnx_model)  # prepare tf representation
+        tf_exp.export_graph("bid.pb")  # export the model
     else:
         trainer.train()

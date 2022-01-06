@@ -251,7 +251,7 @@ class QueryEncoder(nn.Module):
         return:
         (batch_size, query_dim)
         '''
-        assert support.size()[1] == query.size()[1]
+        #assert support.size()[1] == query.size()[1]
 
         if self.process_step == 0:
             return query
